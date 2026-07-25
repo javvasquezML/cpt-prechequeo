@@ -562,7 +562,7 @@ function splitLine(line) {
 
 // ── Navegación ────────────────────────────────────────────────
 function show(id) {
-  ['gate','loading','form-wrap','success'].forEach(i => {
+  ['csv-upload','gate','loading','form-wrap','success'].forEach(i => {
     const el = document.getElementById(i);
     el.style.display = (i === id) ? 'flex' : 'none';
   });
