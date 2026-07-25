@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
   try {
     const body = await leerBody(req);
     if (!body || body.length < 10) return res.status(400).json({ error: 'Archivo vacío' });
-    await put(BLOB_KEY, body, { access: 'private', addRandomSuffix: false, contentType: 'text/plain; charset=utf-8' });
+    await put(BLOB_KEY, body, { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'text/plain; charset=utf-8' });
     return res.status(200).json({ ok: true, uploadedAt: new Date().toISOString() });
   } catch (e) {
     return res.status(500).json({ error: e.message });
