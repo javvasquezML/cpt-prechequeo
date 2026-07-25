@@ -8,106 +8,85 @@
 <title>Pre-Chequeo — CPT</title>
 <link rel="stylesheet" href="styles.css">
 <style>
-  /* ── Layout ── */
   #csv-upload, #gate, #loading, #form-wrap, #success { display: none; }
   #csv-upload { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
-  #gate { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
-  #loading { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); gap: 16px; }
-  #form-wrap { flex-direction: column; align-items: center; padding: 28px 20px 60px; }
-  #success { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
+  #gate       { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
+  #loading    { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); gap: 16px; }
+  #form-wrap  { flex-direction: column; align-items: center; padding: 24px 16px 60px; }
+  #success    { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
 
-  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 30px; max-width: 640px; width: 100%; box-shadow: var(--shadow); margin-bottom: 16px; }
-  .form-card h2 { font-size: 17px; font-weight: 700; margin-bottom: 4px; color: var(--brand-navy); }
-  .form-card .sub { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; }
-
-  /* ── Progress ── */
-  .progress-wrap { max-width: 640px; width: 100%; margin-bottom: 18px; }
-  .progress-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
-  .progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--brand-blue); border-radius: 99px; transition: width .35s ease; }
-
-  /* ── Gate / login ── */
-  .gate-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px; max-width: 420px; width: 100%; box-shadow: var(--shadow); text-align: center; }
-  .gate-icon { font-size: 52px; margin-bottom: 12px; }
-  .gate-card h2 { font-size: 22px; color: var(--brand-navy); margin-bottom: 6px; }
-  .gate-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
-  .pass-wrap { position: relative; margin-bottom: 16px; text-align: left; }
+  /* ── Gate / CSV upload card ── */
+  .gate-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; max-width: 420px; width: 100%; text-align: center; box-shadow: var(--shadow); }
+  .gate-icon { font-size: 48px; margin-bottom: 10px; }
+  .gate-card h2 { font-size: 20px; color: var(--brand-navy); margin-bottom: 6px; }
+  .gate-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+  .pass-wrap { text-align: left; margin-bottom: 14px; }
   .pass-wrap label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
-  .pass-wrap input { width: 100%; background: #fff; border: 1px solid var(--border-strong); color: var(--text); padding: 11px 44px 11px 14px; border-radius: 6px; font-size: 14px; outline: none; transition: border-color .2s; }
+  .pass-wrap { position: relative; }
+  .pass-wrap input { width: 100%; background: #fff; border: 1px solid var(--border-strong); color: var(--text); padding: 11px 42px 11px 14px; border-radius: 6px; font-size: 14px; outline: none; transition: border-color .2s; }
   .pass-wrap input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(52,131,250,.15); }
-  .pass-toggle { position: absolute; right: 6px; top: 32px; background: none; border: none; cursor: pointer; font-size: 16px; padding: 6px; opacity: .6; }
-  .pass-toggle:hover { opacity: 1; }
+  .pass-toggle { position: absolute; right: 8px; top: 30px; background: none; border: none; cursor: pointer; font-size: 15px; opacity: .55; }
 
-  /* ── Field ── */
-  .field { margin-bottom: 20px; }
+  /* ── Form sections ── */
+  .form-wrap-inner { max-width: 640px; width: 100%; }
+  .seccion { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 20px; margin-bottom: 12px; box-shadow: var(--shadow); }
+  .seccion h3 { font-size: 14px; font-weight: 700; color: var(--brand-navy); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
   .field label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
-  .field select, .field input[type="number"] {
-    width: 100%; background: #fff; border: 1px solid var(--border-strong);
-    color: var(--text); padding: 11px 14px; border-radius: 6px;
-    font-size: 14px; outline: none; transition: border-color .2s;
-  }
-  .field select:focus, .field input[type="number"]:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(52,131,250,.15); }
-  .field .hint { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
-  input[type="number"].qty { width: 110px; }
+  .field select { width: 100%; background: #fff; border: 1px solid var(--border-strong); color: var(--text); padding: 10px 14px; border-radius: 6px; font-size: 14px; outline: none; }
+  .field select:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(52,131,250,.15); }
+  input[type="number"].qty { width: 100px; background: #fff; border: 1px solid var(--border-strong); color: var(--text); padding: 10px 14px; border-radius: 6px; font-size: 14px; outline: none; }
+  input[type="number"].qty:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(52,131,250,.15); }
 
-  /* ── Info box (dato del sistema) ── */
-  .info-box { background: #f0f6ff; border-left: 4px solid var(--brand-blue); border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; }
-  .info-box .ib-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 4px; }
-  .info-box .ib-value { font-size: 16px; font-weight: 700; color: var(--brand-navy); font-family: 'Courier New', monospace; }
+  /* ── Info box ── */
+  .info-box { background: #f0f6ff; border-left: 4px solid var(--brand-blue); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; }
+  .info-box .ib-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); margin-bottom: 3px; }
+  .info-box .ib-value { font-size: 15px; font-weight: 700; color: var(--brand-navy); font-family: 'Courier New', monospace; }
 
   /* ── Opciones Si/No ── */
-  .opciones { display: flex; gap: 10px; flex-wrap: wrap; }
-  .op { flex: 1; min-width: 80px; }
+  .opciones { display: flex; gap: 8px; flex-wrap: wrap; }
   .op input[type="radio"] { display: none; }
-  .op label {
-    display: flex; align-items: center; justify-content: center;
-    padding: 11px 16px; border: 2px solid var(--border-strong); border-radius: 8px;
-    cursor: pointer; font-weight: 600; font-size: 14px; transition: all .15s; color: var(--text);
-    user-select: none;
-  }
+  .op label { display: flex; align-items: center; justify-content: center; padding: 9px 18px; border: 2px solid var(--border-strong); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all .15s; color: var(--text); user-select: none; min-width: 70px; }
   .op input:checked + label { border-color: var(--brand-blue); background: var(--brand-blue); color: #fff; }
   .op label:hover { border-color: var(--brand-blue); background: rgba(52,131,250,.06); }
 
-  /* ── Loading spinner ── */
-  .big-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  /* ── Condicional ── */
+  .cond { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+  .cond.visible { display: block; }
+
+  /* ── Submit ── */
+  .submit-wrap { max-width: 640px; width: 100%; margin-top: 8px; }
+  .submit-wrap .btn { width: 100%; justify-content: center; padding: 14px; font-size: 16px; }
+
+  /* ── Loading ── */
+  .big-spinner { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ── Success ── */
-  .success-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 44px 40px; max-width: 480px; width: 100%; text-align: center; box-shadow: var(--shadow); }
-  .success-icon { font-size: 56px; margin-bottom: 14px; }
+  .success-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px; max-width: 460px; width: 100%; text-align: center; box-shadow: var(--shadow); }
+  .success-icon { font-size: 52px; margin-bottom: 12px; }
   .success-card h2 { font-size: 22px; color: var(--green); margin-bottom: 8px; }
-  .success-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
-  .success-meta { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; text-align: left; font-size: 13px; line-height: 1.8; }
+  .success-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+  .success-meta { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; text-align: left; font-size: 13px; line-height: 1.9; }
   .success-meta b { color: var(--brand-navy); }
 
-  /* ── Actions row ── */
-  .actions { display: flex; gap: 10px; margin-top: 24px; }
-  .actions .btn { flex: 1; justify-content: center; }
-
-  /* ── Sección hidden ── */
-  .hidden { display: none !important; }
+  /* ── Drop zone ── */
+  .drop-zone { border: 2px dashed var(--border-strong); border-radius: 10px; padding: 24px 16px; text-align: center; cursor: pointer; margin-bottom: 14px; transition: all .2s; }
+  .drop-zone:hover { border-color: var(--brand-blue); background: rgba(52,131,250,.04); }
 
   @media (max-width: 600px) {
-    .form-card, .gate-card { padding: 20px 16px; border-radius: 12px; }
+    .gate-card { padding: 22px 16px; }
     #form-wrap, #gate, #success, #csv-upload { padding: 12px 12px 50px; }
-    .opciones { flex-direction: column; }
-    .op { min-width: unset; }
-    .progress-wrap { padding: 0 2px; }
-    .actions { flex-direction: column; }
-    .actions .btn { width: 100%; justify-content: center; }
-    header { padding: 10px 14px; flex-wrap: nowrap; }
+    .seccion { padding: 18px 14px; border-radius: 10px; }
+    header { padding: 10px 14px; }
     header h1 { font-size: 14px; }
     .brand-sub { font-size: 10px; }
     .logo { width: 30px; height: 30px; font-size: 14px; }
     .badge { display: none; }
-    .header-actions .btn { padding: 7px 10px; font-size: 12px; }
-    .info-box .ib-value { font-size: 14px; }
-    .gate-icon { font-size: 40px; }
-    .gate-card h2 { font-size: 18px; }
-    .success-card { padding: 28px 18px; }
-    .success-icon { font-size: 44px; }
-    input[type="number"].qty { width: 90px; }
+    .opciones { flex-direction: column; }
+    .op label { justify-content: flex-start; }
   }
 </style>
 </head>
@@ -127,7 +106,7 @@
   </div>
 </header>
 
-<!-- CSV UPLOAD (admin) -->
+<!-- CSV UPLOAD -->
 <div id="csv-upload" style="display:flex">
   <div class="gate-card">
     <div class="gate-icon">📁</div>
@@ -137,36 +116,32 @@
       <label>Contraseña de administrador</label>
       <input type="password" id="csv-pass" placeholder="Contraseña">
     </div>
-    <div id="drop-zone" style="border:2px dashed var(--border-strong);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:16px;transition:all .2s" onclick="document.getElementById('csv-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--brand-blue)'" ondragleave="this.style.borderColor='var(--border-strong)'" ondrop="onDrop(event)">
-      <div style="font-size:36px;margin-bottom:8px">📋</div>
-      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Arrastra el CSV aquí o haz clic para seleccionarlo</p>
+    <div class="drop-zone" onclick="document.getElementById('csv-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--brand-blue)'" ondragleave="this.style.borderColor='var(--border-strong)'" ondrop="onDrop(event)">
+      <div style="font-size:32px;margin-bottom:6px">📋</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">Arrastra el CSV aquí o haz clic</p>
       <button class="btn btn-primary" type="button" onclick="event.stopPropagation();document.getElementById('csv-file').click()">Seleccionar archivo</button>
     </div>
     <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="onFileSelect(this.files[0])">
-    <div id="csv-chosen" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px">
-      <b id="csv-name"></b><br><span id="csv-size" style="color:var(--text-muted)"></span>
-    </div>
-    <button class="btn btn-primary" id="btn-upload-csv" style="width:100%;justify-content:center;display:none" onclick="subirCSV()">⬆ Subir y continuar</button>
-    <div style="margin-top:16px;text-align:center">
-      <a href="#" onclick="show('gate');return false" style="font-size:13px;color:var(--brand-blue)">Ya cargué el CSV, ir al formulario →</a>
-    </div>
-    <p id="csv-error" style="color:var(--red);font-size:13px;margin-top:12px;display:none"></p>
+    <div id="csv-chosen" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px"><b id="csv-name"></b><br><span id="csv-size" style="color:var(--text-muted)"></span></div>
+    <button class="btn btn-primary" id="btn-upload-csv" style="width:100%;justify-content:center;display:none;margin-bottom:10px" onclick="subirCSV()">⬆ Subir y continuar</button>
+    <a href="#" onclick="show('gate');return false" style="font-size:13px;color:var(--brand-blue);display:block;text-align:center">Ya cargué el CSV, ir al formulario →</a>
+    <p id="csv-error" style="color:var(--red);font-size:13px;margin-top:10px;display:none"></p>
   </div>
 </div>
 
-<!-- GATE: contraseña -->
-<div id="gate" style="display:flex">
+<!-- GATE -->
+<div id="gate" style="display:none">
   <div class="gate-card">
     <div class="gate-icon">🔒</div>
     <h2>Pre-Chequeo</h2>
-    <p>Ingresa la contraseña para acceder al formulario de recepción de camiones.</p>
+    <p>Ingresa la contraseña para acceder al formulario.</p>
     <div class="pass-wrap">
-      <label for="pass">Contraseña</label>
+      <label>Contraseña</label>
       <input type="password" id="pass" placeholder="Contraseña de acceso" autocomplete="current-password">
       <button type="button" class="pass-toggle" onclick="togglePass()">👁</button>
     </div>
     <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="acceder()">Entrar →</button>
-    <p id="gate-error" style="color:var(--red);font-size:13px;margin-top:12px;display:none">Contraseña incorrecta</p>
+    <p id="gate-error" style="color:var(--red);font-size:13px;margin-top:10px;display:none">Contraseña incorrecta</p>
   </div>
 </div>
 
@@ -178,256 +153,232 @@
 
 <!-- FORM -->
 <div id="form-wrap" style="display:none">
+  <div class="form-wrap-inner">
 
-  <!-- Progress bar -->
-  <div class="progress-wrap">
-    <div class="progress-label">
-      <span id="step-label">Paso 1 de 16</span>
-      <span id="step-pct">0%</span>
-    </div>
-    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-  </div>
-
-  <!-- S1: Vehículo -->
-  <div class="form-card" id="s1">
-    <h2>1 · Identificación del vehículo</h2>
-    <p class="sub">Selecciona la patente del vehículo tractor según el sistema.</p>
-    <div class="field">
-      <label for="patente">Patente del vehículo tractor</label>
-      <select id="patente" onchange="onPatente()">
-        <option value="">— Seleccionar —</option>
-      </select>
-    </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s1" disabled onclick="ir(2)">Continuar →</button></div>
-  </div>
-
-  <!-- S2: Conductor -->
-  <div class="form-card hidden" id="s2">
-    <h2>2 · Verificación de conductor</h2>
-    <p class="sub">Confirma que el conductor coincide con el registrado en el sistema.</p>
-    <div class="info-box"><div class="ib-label">Conductor registrado (sistema)</div><div class="ib-value" id="ib-conductor">—</div></div>
-    <div class="field">
-      <label>¿Coincide nombre de conductor?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-conductor" id="r-conductor-si" value="Sí" onchange="unlock('btn-s2')"><label for="r-conductor-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-conductor" id="r-conductor-no" value="No" onchange="unlock('btn-s2')"><label for="r-conductor-no">❌ No</label></div>
+    <!-- S1: Patente -->
+    <div class="seccion">
+      <h3>1 · Identificación del vehículo</h3>
+      <div class="field">
+        <label for="patente">Patente del vehículo tractor</label>
+        <select id="patente" onchange="onPatente()">
+          <option value="">— Seleccionar —</option>
+        </select>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s2" disabled onclick="ir(3)">Continuar →</button></div>
-  </div>
 
-  <!-- S3: Tipo vehículo -->
-  <div class="form-card hidden" id="s3">
-    <h2>3 · Tipo de vehículo</h2>
-    <p class="sub">Confirma el tipo de vehículo.</p>
-    <div class="info-box"><div class="ib-label">Tipo registrado (sistema)</div><div class="ib-value" id="ib-tipo">—</div></div>
-    <div class="field">
-      <label>¿Coincide tipo de vehículo?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-tipo" id="r-tipo-si" value="Sí" onchange="unlock('btn-s3')"><label for="r-tipo-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-tipo" id="r-tipo-no" value="No" onchange="unlock('btn-s3')"><label for="r-tipo-no">❌ No</label></div>
+    <!-- S2: Conductor -->
+    <div class="seccion">
+      <h3>2 · Conductor</h3>
+      <div class="info-box"><div class="ib-label">Conductor registrado</div><div class="ib-value" id="ib-conductor">—</div></div>
+      <div class="field">
+        <label>¿Coincide nombre de conductor?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-conductor" id="r-conductor-si" value="Sí"><label for="r-conductor-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-conductor" id="r-conductor-no" value="No"><label for="r-conductor-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s3" disabled onclick="ir(4)">Continuar →</button></div>
-  </div>
 
-  <!-- S4: Empresa -->
-  <div class="form-card hidden" id="s4">
-    <h2>4 · Empresa transportista</h2>
-    <p class="sub">Confirma la empresa transportista.</p>
-    <div class="info-box"><div class="ib-label">Empresa registrada (sistema)</div><div class="ib-value" id="ib-empresa">—</div></div>
-    <div class="field">
-      <label>¿Coincide empresa?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-empresa" id="r-empresa-si" value="Sí" onchange="unlock('btn-s4')"><label for="r-empresa-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-empresa" id="r-empresa-no" value="No" onchange="unlock('btn-s4')"><label for="r-empresa-no">❌ No</label></div>
+    <!-- S3: Tipo vehículo -->
+    <div class="seccion">
+      <h3>3 · Tipo de vehículo</h3>
+      <div class="info-box"><div class="ib-label">Tipo registrado</div><div class="ib-value" id="ib-tipo">—</div></div>
+      <div class="field">
+        <label>¿Coincide tipo de vehículo?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-tipo" id="r-tipo-si" value="Sí"><label for="r-tipo-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-tipo" id="r-tipo-no" value="No"><label for="r-tipo-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s4" disabled onclick="afterEmpresa()">Continuar →</button></div>
-  </div>
 
-  <!-- S5: Doble conductor (condicional según destino col X) -->
-  <div class="form-card hidden" id="s5">
-    <h2>5 · Doble conductor</h2>
-    <p class="sub">El destino de esta ruta requiere verificar si trae doble conductor.</p>
-    <div class="info-box"><div class="ib-label">Destino de ruta</div><div class="ib-value" id="ib-destino">—</div></div>
-    <div class="field">
-      <label>¿Trae doble conductor?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-doble-cond" id="r-dc-si" value="Sí" onchange="unlock('btn-s5')"><label for="r-dc-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-doble-cond" id="r-dc-no" value="No" onchange="unlock('btn-s5')"><label for="r-dc-no">❌ No</label></div>
+    <!-- S4: Empresa -->
+    <div class="seccion">
+      <h3>4 · Empresa transportista</h3>
+      <div class="info-box"><div class="ib-label">Empresa registrada</div><div class="ib-value" id="ib-empresa">—</div></div>
+      <div class="field">
+        <label>¿Coincide empresa?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-empresa" id="r-empresa-si" value="Sí"><label for="r-empresa-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-empresa" id="r-empresa-no" value="No"><label for="r-empresa-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s5" disabled onclick="ir(6)">Continuar →</button></div>
-  </div>
 
-  <!-- S6: Doble llave -->
-  <div class="form-card hidden" id="s6">
-    <h2>6 · Doble llave</h2>
-    <div class="field">
-      <label>¿Trae doble llave?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-llave" id="r-llave-si" value="Sí" onchange="unlock('btn-s6')"><label for="r-llave-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-llave" id="r-llave-no" value="No" onchange="unlock('btn-s6')"><label for="r-llave-no">❌ No</label></div>
+    <!-- S5: Doble conductor (condicional) -->
+    <div class="seccion" id="s-doble-cond" style="display:none">
+      <h3>5 · Doble conductor</h3>
+      <div class="info-box"><div class="ib-label">Destino de ruta</div><div class="ib-value" id="ib-destino">—</div></div>
+      <div class="field">
+        <label>¿Trae doble conductor?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-doble-cond" id="r-dc-si" value="Sí"><label for="r-dc-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-doble-cond" id="r-dc-no" value="No"><label for="r-dc-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s6" disabled onclick="ir(7)">Continuar →</button></div>
-  </div>
 
-  <!-- S7: Encendido automático -->
-  <div class="form-card hidden" id="s7">
-    <h2>7 · Encendido automático</h2>
-    <div class="field">
-      <label>¿Tiene encendido automático?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-enc" id="r-enc-si" value="Sí" onchange="unlock('btn-s7')"><label for="r-enc-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-enc" id="r-enc-no" value="No" onchange="unlock('btn-s7')"><label for="r-enc-no">❌ No</label></div>
+    <!-- S6: Doble llave -->
+    <div class="seccion">
+      <h3>6 · Doble llave</h3>
+      <div class="field">
+        <label>¿Trae doble llave?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-llave" id="r-llave-si" value="Sí"><label for="r-llave-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-llave" id="r-llave-no" value="No"><label for="r-llave-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s7" disabled onclick="ir(8)">Continuar →</button></div>
-  </div>
 
-  <!-- S8: Cortina -->
-  <div class="form-card hidden" id="s8">
-    <h2>8 · Cortina</h2>
-    <div class="field">
-      <label>¿Tiene cortina?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-cortina" id="r-cortina-si" value="Sí" onchange="onCortina()"><label for="r-cortina-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-cortina" id="r-cortina-no" value="No" onchange="onCortina()"><label for="r-cortina-no">❌ No</label></div>
+    <!-- S7: Encendido automático -->
+    <div class="seccion">
+      <h3>7 · Encendido automático</h3>
+      <div class="field">
+        <label>¿Tiene encendido automático?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-enc" id="r-enc-si" value="Sí"><label for="r-enc-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-enc" id="r-enc-no" value="No"><label for="r-enc-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="field hidden" id="f-cortina-func">
-      <label>¿Funciona la cortina?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-cortina-func" id="r-cf-si" value="Sí" onchange="unlock('btn-s8')"><label for="r-cf-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-cortina-func" id="r-cf-no" value="No" onchange="unlock('btn-s8')"><label for="r-cf-no">❌ No</label></div>
+
+    <!-- S8: Cortina -->
+    <div class="seccion">
+      <h3>8 · Cortina</h3>
+      <div class="field">
+        <label>¿Tiene cortina?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-cortina" id="r-cortina-si" value="Sí" onchange="onCortina()"><label for="r-cortina-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-cortina" id="r-cortina-no" value="No" onchange="onCortina()"><label for="r-cortina-no">❌ No</label></div>
+        </div>
+        <div class="cond" id="cond-cortina">
+          <label>¿Funciona la cortina?</label>
+          <div class="opciones">
+            <div class="op"><input type="radio" name="r-cortina-func" id="r-cf-si" value="Sí"><label for="r-cf-si">✅ Sí</label></div>
+            <div class="op"><input type="radio" name="r-cortina-func" id="r-cf-no" value="No"><label for="r-cf-no">❌ No</label></div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s8" disabled onclick="ir(9)">Continuar →</button></div>
-  </div>
 
-  <!-- S9: Goteras -->
-  <div class="form-card hidden" id="s9">
-    <h2>9 · Goteras</h2>
-    <div class="field">
-      <label>¿Tiene goteras?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-goteras" id="r-g-si" value="Sí" onchange="unlock('btn-s9')"><label for="r-g-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-goteras" id="r-g-no" value="No" onchange="unlock('btn-s9')"><label for="r-g-no">❌ No</label></div>
-        <div class="op"><input type="radio" name="r-goteras" id="r-g-prob" value="Es probable" onchange="unlock('btn-s9')"><label for="r-g-prob" style="font-size:12px">⚠️ Es probable<br><span style="font-size:10px;font-weight:400">(revisar en doca)</span></label></div>
+    <!-- S9: Goteras -->
+    <div class="seccion">
+      <h3>9 · Goteras</h3>
+      <div class="field">
+        <label>¿Tiene goteras?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-goteras" id="r-g-si" value="Sí"><label for="r-g-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-goteras" id="r-g-no" value="No"><label for="r-g-no">❌ No</label></div>
+          <div class="op"><input type="radio" name="r-goteras" id="r-g-prob" value="Es probable"><label for="r-g-prob" style="font-size:12px">⚠️ Es probable</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s9" disabled onclick="ir(10)">Continuar →</button></div>
-  </div>
 
-  <!-- S10: Sensor retroceso -->
-  <div class="form-card hidden" id="s10">
-    <h2>10 · Sensor de retroceso</h2>
-    <div class="field">
-      <label>¿Tiene sensor de retroceso?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-sensor" id="r-sensor-si" value="Sí" onchange="unlock('btn-s10')"><label for="r-sensor-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-sensor" id="r-sensor-no" value="No" onchange="unlock('btn-s10')"><label for="r-sensor-no">❌ No</label></div>
+    <!-- S10: Sensor retroceso -->
+    <div class="seccion">
+      <h3>10 · Sensor de retroceso</h3>
+      <div class="field">
+        <label>¿Tiene sensor de retroceso?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-sensor" id="r-sensor-si" value="Sí"><label for="r-sensor-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-sensor" id="r-sensor-no" value="No"><label for="r-sensor-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s10" disabled onclick="ir(11)">Continuar →</button></div>
-  </div>
 
-  <!-- S11: EPP -->
-  <div class="form-card hidden" id="s11">
-    <h2>11 · EPP</h2>
-    <div class="field">
-      <label>¿El conductor trae EPP (Equipo de Protección Personal)?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-epp" id="r-epp-si" value="Sí" onchange="unlock('btn-s11')"><label for="r-epp-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-epp" id="r-epp-no" value="No" onchange="unlock('btn-s11')"><label for="r-epp-no">❌ No</label></div>
+    <!-- S11: EPP -->
+    <div class="seccion">
+      <h3>11 · EPP</h3>
+      <div class="field">
+        <label>¿El conductor trae EPP?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-epp" id="r-epp-si" value="Sí"><label for="r-epp-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-epp" id="r-epp-no" value="No"><label for="r-epp-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s11" disabled onclick="ir(12)">Continuar →</button></div>
-  </div>
 
-  <!-- S12: Eslingas -->
-  <div class="form-card hidden" id="s12">
-    <h2>12 · Eslingas</h2>
-    <div class="field">
-      <label>¿Trae eslingas?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-esl" id="r-esl-si" value="Sí" onchange="onEquipo('esl','f-esl-qty','btn-s12')"><label for="r-esl-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-esl" id="r-esl-no" value="No" onchange="onEquipo('esl','f-esl-qty','btn-s12')"><label for="r-esl-no">❌ No</label></div>
+    <!-- S12: Eslingas -->
+    <div class="seccion">
+      <h3>12 · Eslingas</h3>
+      <div class="field">
+        <label>¿Trae eslingas?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-esl" id="r-esl-si" value="Sí" onchange="toggleQty('esl')"><label for="r-esl-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-esl" id="r-esl-no" value="No" onchange="toggleQty('esl')"><label for="r-esl-no">❌ No</label></div>
+        </div>
+        <div class="cond" id="cond-esl">
+          <label>¿Cuántas?</label>
+          <input type="number" class="qty" id="qty-esl" min="1" max="99" placeholder="0">
+        </div>
       </div>
     </div>
-    <div class="field hidden" id="f-esl-qty">
-      <label>¿Cuántas eslingas?</label>
-      <input type="number" class="qty" id="qty-esl" min="1" max="99" placeholder="0" oninput="unlock('btn-s12')">
-    </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s12" disabled onclick="ir(13)">Continuar →</button></div>
-  </div>
 
-  <!-- S13: Trinquetes -->
-  <div class="form-card hidden" id="s13">
-    <h2>13 · Trinquetes</h2>
-    <div class="field">
-      <label>¿Trae trinquetes?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-trq" id="r-trq-si" value="Sí" onchange="onEquipo('trq','f-trq-qty','btn-s13')"><label for="r-trq-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-trq" id="r-trq-no" value="No" onchange="onEquipo('trq','f-trq-qty','btn-s13')"><label for="r-trq-no">❌ No</label></div>
+    <!-- S13: Trinquetes -->
+    <div class="seccion">
+      <h3>13 · Trinquetes</h3>
+      <div class="field">
+        <label>¿Trae trinquetes?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-trq" id="r-trq-si" value="Sí" onchange="toggleQty('trq')"><label for="r-trq-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-trq" id="r-trq-no" value="No" onchange="toggleQty('trq')"><label for="r-trq-no">❌ No</label></div>
+        </div>
+        <div class="cond" id="cond-trq">
+          <label>¿Cuántos?</label>
+          <input type="number" class="qty" id="qty-trq" min="1" max="99" placeholder="0">
+        </div>
       </div>
     </div>
-    <div class="field hidden" id="f-trq-qty">
-      <label>¿Cuántos trinquetes?</label>
-      <input type="number" class="qty" id="qty-trq" min="1" max="99" placeholder="0" oninput="unlock('btn-s13')">
-    </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s13" disabled onclick="ir(14)">Continuar →</button></div>
-  </div>
 
-  <!-- S14: Separadores -->
-  <div class="form-card hidden" id="s14">
-    <h2>14 · Separadores</h2>
-    <div class="field">
-      <label>¿Trae separadores?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-sep" id="r-sep-si" value="Sí" onchange="onEquipo('sep','f-sep-qty','btn-s14')"><label for="r-sep-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-sep" id="r-sep-no" value="No" onchange="onEquipo('sep','f-sep-qty','btn-s14')"><label for="r-sep-no">❌ No</label></div>
+    <!-- S14: Separadores -->
+    <div class="seccion">
+      <h3>14 · Separadores</h3>
+      <div class="field">
+        <label>¿Trae separadores?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-sep" id="r-sep-si" value="Sí" onchange="toggleQty('sep')"><label for="r-sep-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-sep" id="r-sep-no" value="No" onchange="toggleQty('sep')"><label for="r-sep-no">❌ No</label></div>
+        </div>
+        <div class="cond" id="cond-sep">
+          <label>¿Cuántos?</label>
+          <input type="number" class="qty" id="qty-sep" min="1" max="99" placeholder="0">
+        </div>
       </div>
     </div>
-    <div class="field hidden" id="f-sep-qty">
-      <label>¿Cuántos separadores?</label>
-      <input type="number" class="qty" id="qty-sep" min="1" max="99" placeholder="0" oninput="unlock('btn-s14')">
-    </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s14" disabled onclick="ir(15)">Continuar →</button></div>
-  </div>
 
-  <!-- S15: Candado -->
-  <div class="form-card hidden" id="s15">
-    <h2>15 · Candado de puertas</h2>
-    <div class="field">
-      <label>¿Trae candado de puertas?</label>
-      <div class="opciones">
-        <div class="op"><input type="radio" name="r-candado" id="r-can-si" value="Sí" onchange="unlock('btn-s15')"><label for="r-can-si">✅ Sí</label></div>
-        <div class="op"><input type="radio" name="r-candado" id="r-can-no" value="No" onchange="unlock('btn-s15')"><label for="r-can-no">❌ No</label></div>
+    <!-- S15: Candado -->
+    <div class="seccion">
+      <h3>15 · Candado de puertas</h3>
+      <div class="field">
+        <label>¿Trae candado de puertas?</label>
+        <div class="opciones">
+          <div class="op"><input type="radio" name="r-candado" id="r-can-si" value="Sí"><label for="r-can-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-candado" id="r-can-no" value="No"><label for="r-can-no">❌ No</label></div>
+        </div>
       </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s15" disabled onclick="ir(16)">Continuar →</button></div>
-  </div>
 
-  <!-- S16: Verificador YMS -->
-  <div class="form-card hidden" id="s16">
-    <h2>16 · Verificador YMS</h2>
-    <p class="sub">Selecciona quien realiza la verificación.</p>
-    <div class="field">
-      <label for="verificador">Nombre del verificador YMS</label>
-      <select id="verificador" onchange="if(this.value) unlock('btn-s16')">
-        <option value="">— Seleccionar —</option>
-        <option>Almendra</option>
-        <option>Belén</option>
-        <option>Miguel</option>
-      </select>
+    <!-- S16: Verificador -->
+    <div class="seccion">
+      <h3>16 · Verificador YMS</h3>
+      <div class="field">
+        <label for="verificador">Nombre del verificador</label>
+        <select id="verificador">
+          <option value="">— Seleccionar —</option>
+          <option>Almendra</option>
+          <option>Belén</option>
+          <option>Miguel</option>
+        </select>
+      </div>
     </div>
-    <div class="actions"><button class="btn btn-primary" id="btn-s16" disabled onclick="enviar()">✓ Confirmar y enviar</button></div>
-  </div>
 
-</div><!-- /form-wrap -->
+    <!-- Submit -->
+    <div class="submit-wrap">
+      <button class="btn btn-primary" id="btn-enviar" onclick="enviar()">✓ Confirmar y enviar</button>
+    </div>
+
+  </div>
+</div>
 
 <!-- SUCCESS -->
 <div id="success" style="display:none">
@@ -436,9 +387,9 @@
     <h2>Pre-chequeo registrado</h2>
     <p>La verificación quedó guardada correctamente.</p>
     <div class="success-meta" id="success-meta"></div>
-    <div class="actions">
-      <button class="btn btn-primary" onclick="nuevoChequeo()" style="justify-content:center">+ Nuevo registro</button>
-      <a class="btn btn-outline" href="/historial-prechequeo.html" style="justify-content:center">Ver historial →</a>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="nuevoChequeo()" style="flex:1;justify-content:center">+ Nuevo registro</button>
+      <a class="btn btn-outline" href="/historial-prechequeo.html" style="flex:1;justify-content:center">Ver historial →</a>
     </div>
   </div>
 </div>
@@ -446,18 +397,29 @@
 <div id="toast"></div>
 
 <script>
-// ── Config ────────────────────────────────────────────────────
 const DESTINOS_DOBLE = new Set(['EAF1','ELS1','EPM1','EPM2','EPO1','ETM1','SAF1','SAR1','SIQ1','SLS1','SPM1','SPO1','SVL1']);
-const TOTAL_STEPS = 16;
 let csvRows = [];
 let selectedRow = null;
 let appPass = '';
-let currentStep = 0;
-let dobleCondAplica = false;
 
-// ── Inicio ────────────────────────────────────────────────────
-// Mostrar pantalla de carga CSV al inicio
+// ── Mostrar pantalla inicial ──────────────────────────────────
 show('csv-upload');
+
+// ── Helpers ───────────────────────────────────────────────────
+function show(id) {
+  ['csv-upload','gate','loading','form-wrap','success'].forEach(i => {
+    document.getElementById(i).style.display = (i === id) ? 'flex' : 'none';
+  });
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function getR(name) { return document.querySelector(`input[name="${name}"]:checked`)?.value || ''; }
+function getQty(id) { return document.getElementById(id)?.value || '0'; }
 
 // ── CSV Upload ────────────────────────────────────────────────
 let csvFile = null;
@@ -471,7 +433,6 @@ function onFileSelect(f) {
 }
 function onDrop(e) {
   e.preventDefault();
-  document.getElementById('drop-zone').style.borderColor = 'var(--border-strong)';
   const f = e.dataTransfer.files[0];
   if (f && f.name.toLowerCase().endsWith('.csv')) onFileSelect(f);
   else toast('⚠️ Debe ser un archivo .csv');
@@ -522,27 +483,24 @@ async function acceder() {
     if (resp.status === 401) { show('gate'); document.getElementById('gate-error').style.display = 'block'; return; }
     if (!resp.ok) { const d = await resp.json().catch(() => ({})); throw new Error(d.error || 'Error al cargar datos'); }
     const data = await resp.json();
-    parsearCSV(data.csv || data);
+    parsearCSV(data.csv);
     sessionStorage.setItem('appPass', pass);
     show('form-wrap');
-    ir(1);
   } catch (e) {
     show('gate');
     toast('❌ ' + e.message);
   }
 }
 
-// ── CSV ───────────────────────────────────────────────────────
+// ── CSV Parser ────────────────────────────────────────────────
 function parsearCSV(raw) {
   const lines = raw.split(/\r?\n/).filter(l => l.trim());
-  const headers = splitLine(lines[0]);
   csvRows = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = splitLine(lines[i]);
     if (cols.length > 10) csvRows.push(cols.map(c => c.trim()));
   }
-  // Poblar dropdown col K (índice 10) — únicos, ordenados
-  const patentes = [...new Set(csvRows.map(r => r[10]).filter(v => v && v !== 'sin placa de tractor'))].sort();
+  const patentes = [...new Set(csvRows.map(r => r[10]).filter(v => v))].sort();
   const sel = document.getElementById('patente');
   patentes.forEach(p => {
     const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o);
@@ -560,124 +518,73 @@ function splitLine(line) {
   return res;
 }
 
-// ── Navegación ────────────────────────────────────────────────
-function show(id) {
-  ['csv-upload','gate','loading','form-wrap','success'].forEach(i => {
-    const el = document.getElementById(i);
-    el.style.display = (i === id) ? 'flex' : 'none';
-  });
-}
-
-function ir(step) {
-  if (currentStep > 0) document.getElementById('s' + currentStep)?.classList.add('hidden');
-  currentStep = step;
-
-  if (step === 2 && selectedRow)
-    document.getElementById('ib-conductor').textContent = selectedRow[7] || 'No registrado';
-  if (step === 3 && selectedRow)
-    document.getElementById('ib-tipo').textContent = selectedRow[5] || 'No registrado';
-  if (step === 4 && selectedRow)
-    document.getElementById('ib-empresa').textContent = selectedRow[4] || 'No registrado';
-  if (step === 5 && selectedRow)
-    document.getElementById('ib-destino').textContent = selectedRow[23] || '—';
-
-  document.getElementById('s' + step)?.classList.remove('hidden');
-  actualizarProgress(step);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function actualizarProgress(step) {
-  const pct = Math.round(((step - 1) / TOTAL_STEPS) * 100);
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('step-label').textContent = `Paso ${step} de ${TOTAL_STEPS}`;
-  document.getElementById('step-pct').textContent = pct + '%';
-}
-
-function unlock(btnId) {
-  document.getElementById(btnId).disabled = false;
-}
-
-// ── Lógica vehículo (S1) ──────────────────────────────────────
+// ── Patente seleccionada ──────────────────────────────────────
 function onPatente() {
   const val = document.getElementById('patente').value;
-  document.getElementById('btn-s1').disabled = !val;
-  if (val) {
-    selectedRow = csvRows.find(r => r[10] === val) || null;
-  }
-}
+  selectedRow = val ? (csvRows.find(r => r[10] === val) || null) : null;
 
-// ── Después de empresa: decidir si mostrar doble conductor ────
-function afterEmpresa() {
+  document.getElementById('ib-conductor').textContent = selectedRow ? (selectedRow[7] || '—') : '—';
+  document.getElementById('ib-tipo').textContent      = selectedRow ? (selectedRow[5] || '—') : '—';
+  document.getElementById('ib-empresa').textContent   = selectedRow ? (selectedRow[4] || '—') : '—';
+
   const destino = selectedRow ? (selectedRow[23] || '').trim() : '';
-  dobleCondAplica = DESTINOS_DOBLE.has(destino);
-  ir(dobleCondAplica ? 5 : 6);
+  const dobleAplica = DESTINOS_DOBLE.has(destino);
+  document.getElementById('s-doble-cond').style.display = dobleAplica ? 'block' : 'none';
+  if (dobleAplica) document.getElementById('ib-destino').textContent = destino;
 }
 
-// ── Cortina condicional (S8) ──────────────────────────────────
+// ── Condicionales ─────────────────────────────────────────────
 function onCortina() {
-  const val = document.querySelector('input[name="r-cortina"]:checked')?.value;
-  const fFunc = document.getElementById('f-cortina-func');
-  if (val === 'Sí') {
-    fFunc.classList.remove('hidden');
-    document.getElementById('btn-s8').disabled = true;
-  } else {
-    fFunc.classList.add('hidden');
-    unlock('btn-s8');
-  }
+  const val = getR('r-cortina');
+  document.getElementById('cond-cortina').classList.toggle('visible', val === 'Sí');
 }
 
-// ── Equipamiento con cantidad ─────────────────────────────────
-function onEquipo(nombre, fQtyId, btnId) {
-  const val = document.querySelector(`input[name="r-${nombre}"]:checked`)?.value;
-  const fq = document.getElementById(fQtyId);
-  if (val === 'Sí') {
-    fq.classList.remove('hidden');
-    document.getElementById(btnId).disabled = true;
-  } else {
-    fq.classList.add('hidden');
-    unlock(btnId);
-  }
+function toggleQty(nombre) {
+  const val = getR('r-' + nombre);
+  document.getElementById('cond-' + nombre).classList.toggle('visible', val === 'Sí');
 }
 
 // ── Enviar ────────────────────────────────────────────────────
-function getR(name) { return document.querySelector(`input[name="${name}"]:checked`)?.value || ''; }
-function getQty(id) { return document.getElementById(id).value || '0'; }
-
 async function enviar() {
+  if (!document.getElementById('patente').value) { toast('⚠️ Selecciona una patente'); return; }
+  if (!document.getElementById('verificador').value) { toast('⚠️ Selecciona un verificador'); return; }
+
   const ahora = new Date();
+  const destino = selectedRow ? (selectedRow[23] || '') : '';
+  const dobleAplica = DESTINOS_DOBLE.has(destino.trim());
+
   const reg = {
-    fecha_hora:       ahora.toLocaleString('es-CL'),
-    fecha:            ahora.toLocaleDateString('es-CL'),
-    hora:             ahora.toLocaleTimeString('es-CL'),
-    patente:          document.getElementById('patente').value,
-    conductor_sist:   document.getElementById('ib-conductor').textContent,
-    coincide_cond:    getR('r-conductor'),
-    tipo_sist:        document.getElementById('ib-tipo').textContent,
-    coincide_tipo:    getR('r-tipo'),
-    empresa_sist:     document.getElementById('ib-empresa').textContent,
+    fecha_hora: ahora.toLocaleString('es-CL'),
+    fecha: ahora.toLocaleDateString('es-CL'),
+    hora: ahora.toLocaleTimeString('es-CL'),
+    patente: document.getElementById('patente').value,
+    conductor_sist: document.getElementById('ib-conductor').textContent,
+    coincide_cond: getR('r-conductor'),
+    tipo_sist: document.getElementById('ib-tipo').textContent,
+    coincide_tipo: getR('r-tipo'),
+    empresa_sist: document.getElementById('ib-empresa').textContent,
     coincide_empresa: getR('r-empresa'),
-    doble_conductor:  dobleCondAplica ? getR('r-doble-cond') : 'N/A',
-    doble_llave:      getR('r-llave'),
-    enc_automatico:   getR('r-enc'),
-    tiene_cortina:    getR('r-cortina'),
+    doble_conductor: dobleAplica ? getR('r-doble-cond') : 'N/A',
+    doble_llave: getR('r-llave'),
+    enc_automatico: getR('r-enc'),
+    tiene_cortina: getR('r-cortina'),
     cortina_funciona: getR('r-cortina') === 'Sí' ? getR('r-cortina-func') : 'N/A',
-    goteras:          getR('r-goteras'),
+    goteras: getR('r-goteras'),
     sensor_retroceso: getR('r-sensor'),
-    epp:              getR('r-epp'),
-    eslingas:         getR('r-esl'),
-    eslingas_cant:    getR('r-esl') === 'Sí' ? getQty('qty-esl') : '0',
-    trinquetes:       getR('r-trq'),
-    trinquetes_cant:  getR('r-trq') === 'Sí' ? getQty('qty-trq') : '0',
-    separadores:      getR('r-sep'),
+    epp: getR('r-epp'),
+    eslingas: getR('r-esl'),
+    eslingas_cant: getR('r-esl') === 'Sí' ? getQty('qty-esl') : '0',
+    trinquetes: getR('r-trq'),
+    trinquetes_cant: getR('r-trq') === 'Sí' ? getQty('qty-trq') : '0',
+    separadores: getR('r-sep'),
     separadores_cant: getR('r-sep') === 'Sí' ? getQty('qty-sep') : '0',
-    candado:          getR('r-candado'),
-    verificador_yms:  document.getElementById('verificador').value,
-    destino_ruta:     selectedRow ? (selectedRow[23] || '') : '',
+    candado: getR('r-candado'),
+    verificador_yms: document.getElementById('verificador').value,
+    destino_ruta: destino,
   };
 
-  const btn = document.getElementById('btn-s16');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Guardando…';
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Guardando…';
 
   try {
     const resp = await fetch('/api/prechequeo', {
@@ -685,9 +592,8 @@ async function enviar() {
       headers: { 'Content-Type': 'application/json', 'x-app-password': appPass },
       body: JSON.stringify(reg),
     });
-    if (!resp.ok) throw new Error('Error al guardar');
+    if (!resp.ok) { const d = await resp.json().catch(() => ({})); throw new Error(d.error || 'Error al guardar'); }
 
-    // Mostrar resumen
     document.getElementById('success-meta').innerHTML =
       `<b>Patente:</b> ${reg.patente}<br>` +
       `<b>Conductor:</b> ${reg.conductor_sist}<br>` +
@@ -696,8 +602,7 @@ async function enviar() {
     show('success');
   } catch (e) {
     toast('❌ ' + e.message);
-    btn.disabled = false;
-    btn.innerHTML = '✓ Confirmar y enviar';
+    btn.disabled = false; btn.innerHTML = '✓ Confirmar y enviar';
   }
 }
 
@@ -707,24 +612,17 @@ function nuevoChequeo() {
   document.querySelectorAll('input[type="number"]').forEach(n => n.value = '');
   document.getElementById('verificador').value = '';
   document.getElementById('patente').value = '';
-  ['f-cortina-func','f-esl-qty','f-trq-qty','f-sep-qty'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  document.querySelectorAll('[id^="btn-s"]').forEach(b => b.disabled = true);
+  document.querySelectorAll('.cond').forEach(c => c.classList.remove('visible'));
+  document.getElementById('s-doble-cond').style.display = 'none';
   selectedRow = null;
-  currentStep = 0;
+  onPatente();
   show('form-wrap');
-  ir(1);
+  window.scrollTo({ top: 0 });
 }
 
-// ── Toast ─────────────────────────────────────────────────────
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3500);
-}
-
-// Restaurar sesión si hay contraseña guardada
+// Restaurar contraseña guardada
 const saved = sessionStorage.getItem('appPass');
-if (saved) { document.getElementById('pass').value = saved; }
+if (saved) { document.getElementById('pass').value = saved; document.getElementById('csv-pass').value = saved; }
 </script>
 </body>
 </html>
