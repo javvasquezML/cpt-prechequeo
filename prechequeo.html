@@ -569,11 +569,19 @@ function show(id) {
 }
 
 function ir(step) {
-  // Ocultar paso actual
   if (currentStep > 0) document.getElementById('s' + currentStep)?.classList.add('hidden');
   currentStep = step;
-  const el = document.getElementById('s' + step);
-  if (el) { el.classList.remove('hidden'); }
+
+  if (step === 2 && selectedRow)
+    document.getElementById('ib-conductor').textContent = selectedRow[7] || 'No registrado';
+  if (step === 3 && selectedRow)
+    document.getElementById('ib-tipo').textContent = selectedRow[5] || 'No registrado';
+  if (step === 4 && selectedRow)
+    document.getElementById('ib-empresa').textContent = selectedRow[4] || 'No registrado';
+  if (step === 5 && selectedRow)
+    document.getElementById('ib-destino').textContent = selectedRow[23] || '—';
+
+  document.getElementById('s' + step)?.classList.remove('hidden');
   actualizarProgress(step);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
