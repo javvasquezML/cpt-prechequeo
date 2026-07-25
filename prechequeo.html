@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FFE600">
+<title>Pre-Chequeo — CPT</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ── Layout ── */
+  #gate, #loading, #form-wrap, #success { display: none; }
+  #gate { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
+  #loading { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); gap: 16px; }
+  #form-wrap { flex-direction: column; align-items: center; padding: 28px 20px 60px; }
+  #success { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
+
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 30px; max-width: 640px; width: 100%; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .form-card h2 { font-size: 17px; font-weight: 700; margin-bottom: 4px; color: var(--brand-navy); }
+  .form-card .sub { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; }
+
+  /* ── Progress ── */
+  .progress-wrap { max-width: 640px; width: 100%; margin-bottom: 18px; }
+  .progress-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--brand-blue); border-radius: 99px; transition: width .35s ease; }
+
+  /* ── Gate / login ── */
+  .gate-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px; max-width: 420px; width: 100%; box-shadow: var(--shadow); text-align: center; }
+  .gate-icon { font-size: 52px; margin-bottom: 12px; }
+  .gate-card h2 { font-size: 22px; color: var(--brand-navy); margin-bottom: 6px; }
+  .gate-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+  .pass-wrap { position: relative; margin-bottom: 16px; text-align: left; }
+  .pass-wrap label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+  .pass-wrap input { width: 100%; background: #fff; border: 1px solid var(--border-strong); color: var(--text); padding: 11px 44px 11px 14px; border-radius: 6px; font-size: 14px; outline: none; transition: border-color .2s; }
+  .pass-wrap input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(52,131,250,.15); }
+  .pass-toggle { position: absolute; right: 6px; top: 32px; background: none; border: none; cursor: pointer; font-size: 16px; padding: 6px; opacity: .6; }
+  .pass-toggle:hover { opacity: 1; }
+
+  /* ── Field ── */
+  .field { margin-bottom: 20px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .field select, .field input[type="number"] {
+    width: 100%; background: #fff; border: 1px solid var(--border-strong);
+    color: var(--text); padding: 11px 14px; border-radius: 6px;
+    font-size: 14px; outline: none; transition: border-color .2s;
+  }
+  .field select:focus, .field input[type="number"]:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(52,131,250,.15); }
+  .field .hint { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+  input[type="number"].qty { width: 110px; }
+
+  /* ── Info box (dato del sistema) ── */
+  .info-box { background: #f0f6ff; border-left: 4px solid var(--brand-blue); border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; }
+  .info-box .ib-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 4px; }
+  .info-box .ib-value { font-size: 16px; font-weight: 700; color: var(--brand-navy); font-family: 'Courier New', monospace; }
+
+  /* ── Opciones Si/No ── */
+  .opciones { display: flex; gap: 10px; flex-wrap: wrap; }
+  .op { flex: 1; min-width: 80px; }
+  .op input[type="radio"] { display: none; }
+  .op label {
+    display: flex; align-items: center; justify-content: center;
+    padding: 11px 16px; border: 2px solid var(--border-strong); border-radius: 8px;
+    cursor: pointer; font-weight: 600; font-size: 14px; transition: all .15s; color: var(--text);
+    user-select: none;
+  }
+  .op input:checked + label { border-color: var(--brand-blue); background: var(--brand-blue); color: #fff; }
+  .op label:hover { border-color: var(--brand-blue); background: rgba(52,131,250,.06); }
+
+  /* ── Loading spinner ── */
+  .big-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+
+  /* ── Success ── */
+  .success-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 44px 40px; max-width: 480px; width: 100%; text-align: center; box-shadow: var(--shadow); }
+  .success-icon { font-size: 56px; margin-bottom: 14px; }
+  .success-card h2 { font-size: 22px; color: var(--green); margin-bottom: 8px; }
+  .success-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+  .success-meta { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; text-align: left; font-size: 13px; line-height: 1.8; }
+  .success-meta b { color: var(--brand-navy); }
+
+  /* ── Actions row ── */
+  .actions { display: flex; gap: 10px; margin-top: 24px; }
+  .actions .btn { flex: 1; justify-content: center; }
+
+  /* ── Sección hidden ── */
+  .hidden { display: none !important; }
+
+  @media (max-width: 600px) {
+    .form-card, .gate-card { padding: 22px 18px; border-radius: 12px; }
+    #form-wrap, #gate, #success { padding: 16px 14px 50px; }
+    .opciones { flex-direction: column; }
+    .op { min-width: unset; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a class="logo" href="/">🚚</a>
+    <div>
+      <h1>Shipping <span>· Pre-Chequeo</span></h1>
+      <div class="brand-sub">Mercado Libre</div>
+    </div>
+    <span class="badge">Guardia</span>
+  </div>
+  <div class="header-actions">
+    <a class="btn btn-outline" href="/">← Menú</a>
+  </div>
+</header>
+
+<!-- GATE: contraseña -->
+<div id="gate" style="display:flex">
+  <div class="gate-card">
+    <div class="gate-icon">🔒</div>
+    <h2>Pre-Chequeo</h2>
+    <p>Ingresa la contraseña para acceder al formulario de recepción de camiones.</p>
+    <div class="pass-wrap">
+      <label for="pass">Contraseña</label>
+      <input type="password" id="pass" placeholder="Contraseña de acceso" autocomplete="current-password">
+      <button type="button" class="pass-toggle" onclick="togglePass()">👁</button>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="acceder()">Entrar →</button>
+    <p id="gate-error" style="color:var(--red);font-size:13px;margin-top:12px;display:none">Contraseña incorrecta</p>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading" style="display:none">
+  <div class="big-spinner"></div>
+  <p style="color:var(--text-muted);font-size:14px">Cargando datos de rutas…</p>
+</div>
+
+<!-- FORM -->
+<div id="form-wrap" style="display:none">
+
+  <!-- Progress bar -->
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span id="step-label">Paso 1 de 16</span>
+      <span id="step-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- S1: Vehículo -->
+  <div class="form-card" id="s1">
+    <h2>1 · Identificación del vehículo</h2>
+    <p class="sub">Selecciona la patente del vehículo tractor según el sistema.</p>
+    <div class="field">
+      <label for="patente">Patente del vehículo tractor</label>
+      <select id="patente" onchange="onPatente()">
+        <option value="">— Seleccionar —</option>
+      </select>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s1" disabled onclick="ir(2)">Continuar →</button></div>
+  </div>
+
+  <!-- S2: Conductor -->
+  <div class="form-card hidden" id="s2">
+    <h2>2 · Verificación de conductor</h2>
+    <p class="sub">Confirma que el conductor coincide con el registrado en el sistema.</p>
+    <div class="info-box"><div class="ib-label">Conductor registrado (sistema)</div><div class="ib-value" id="ib-conductor">—</div></div>
+    <div class="field">
+      <label>¿Coincide nombre de conductor?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-conductor" id="r-conductor-si" value="Sí" onchange="unlock('btn-s2')"><label for="r-conductor-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-conductor" id="r-conductor-no" value="No" onchange="unlock('btn-s2')"><label for="r-conductor-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s2" disabled onclick="ir(3)">Continuar →</button></div>
+  </div>
+
+  <!-- S3: Tipo vehículo -->
+  <div class="form-card hidden" id="s3">
+    <h2>3 · Tipo de vehículo</h2>
+    <p class="sub">Confirma el tipo de vehículo.</p>
+    <div class="info-box"><div class="ib-label">Tipo registrado (sistema)</div><div class="ib-value" id="ib-tipo">—</div></div>
+    <div class="field">
+      <label>¿Coincide tipo de vehículo?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-tipo" id="r-tipo-si" value="Sí" onchange="unlock('btn-s3')"><label for="r-tipo-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-tipo" id="r-tipo-no" value="No" onchange="unlock('btn-s3')"><label for="r-tipo-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s3" disabled onclick="ir(4)">Continuar →</button></div>
+  </div>
+
+  <!-- S4: Empresa -->
+  <div class="form-card hidden" id="s4">
+    <h2>4 · Empresa transportista</h2>
+    <p class="sub">Confirma la empresa transportista.</p>
+    <div class="info-box"><div class="ib-label">Empresa registrada (sistema)</div><div class="ib-value" id="ib-empresa">—</div></div>
+    <div class="field">
+      <label>¿Coincide empresa?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-empresa" id="r-empresa-si" value="Sí" onchange="unlock('btn-s4')"><label for="r-empresa-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-empresa" id="r-empresa-no" value="No" onchange="unlock('btn-s4')"><label for="r-empresa-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s4" disabled onclick="afterEmpresa()">Continuar →</button></div>
+  </div>
+
+  <!-- S5: Doble conductor (condicional según destino col X) -->
+  <div class="form-card hidden" id="s5">
+    <h2>5 · Doble conductor</h2>
+    <p class="sub">El destino de esta ruta requiere verificar si trae doble conductor.</p>
+    <div class="info-box"><div class="ib-label">Destino de ruta</div><div class="ib-value" id="ib-destino">—</div></div>
+    <div class="field">
+      <label>¿Trae doble conductor?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-doble-cond" id="r-dc-si" value="Sí" onchange="unlock('btn-s5')"><label for="r-dc-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-doble-cond" id="r-dc-no" value="No" onchange="unlock('btn-s5')"><label for="r-dc-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s5" disabled onclick="ir(6)">Continuar →</button></div>
+  </div>
+
+  <!-- S6: Doble llave -->
+  <div class="form-card hidden" id="s6">
+    <h2>6 · Doble llave</h2>
+    <div class="field">
+      <label>¿Trae doble llave?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-llave" id="r-llave-si" value="Sí" onchange="unlock('btn-s6')"><label for="r-llave-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-llave" id="r-llave-no" value="No" onchange="unlock('btn-s6')"><label for="r-llave-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s6" disabled onclick="ir(7)">Continuar →</button></div>
+  </div>
+
+  <!-- S7: Encendido automático -->
+  <div class="form-card hidden" id="s7">
+    <h2>7 · Encendido automático</h2>
+    <div class="field">
+      <label>¿Tiene encendido automático?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-enc" id="r-enc-si" value="Sí" onchange="unlock('btn-s7')"><label for="r-enc-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-enc" id="r-enc-no" value="No" onchange="unlock('btn-s7')"><label for="r-enc-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s7" disabled onclick="ir(8)">Continuar →</button></div>
+  </div>
+
+  <!-- S8: Cortina -->
+  <div class="form-card hidden" id="s8">
+    <h2>8 · Cortina</h2>
+    <div class="field">
+      <label>¿Tiene cortina?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-cortina" id="r-cortina-si" value="Sí" onchange="onCortina()"><label for="r-cortina-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-cortina" id="r-cortina-no" value="No" onchange="onCortina()"><label for="r-cortina-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="field hidden" id="f-cortina-func">
+      <label>¿Funciona la cortina?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-cortina-func" id="r-cf-si" value="Sí" onchange="unlock('btn-s8')"><label for="r-cf-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-cortina-func" id="r-cf-no" value="No" onchange="unlock('btn-s8')"><label for="r-cf-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s8" disabled onclick="ir(9)">Continuar →</button></div>
+  </div>
+
+  <!-- S9: Goteras -->
+  <div class="form-card hidden" id="s9">
+    <h2>9 · Goteras</h2>
+    <div class="field">
+      <label>¿Tiene goteras?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-goteras" id="r-g-si" value="Sí" onchange="unlock('btn-s9')"><label for="r-g-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-goteras" id="r-g-no" value="No" onchange="unlock('btn-s9')"><label for="r-g-no">❌ No</label></div>
+        <div class="op"><input type="radio" name="r-goteras" id="r-g-prob" value="Es probable" onchange="unlock('btn-s9')"><label for="r-g-prob" style="font-size:12px">⚠️ Es probable<br><span style="font-size:10px;font-weight:400">(revisar en doca)</span></label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s9" disabled onclick="ir(10)">Continuar →</button></div>
+  </div>
+
+  <!-- S10: Sensor retroceso -->
+  <div class="form-card hidden" id="s10">
+    <h2>10 · Sensor de retroceso</h2>
+    <div class="field">
+      <label>¿Tiene sensor de retroceso?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-sensor" id="r-sensor-si" value="Sí" onchange="unlock('btn-s10')"><label for="r-sensor-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-sensor" id="r-sensor-no" value="No" onchange="unlock('btn-s10')"><label for="r-sensor-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s10" disabled onclick="ir(11)">Continuar →</button></div>
+  </div>
+
+  <!-- S11: EPP -->
+  <div class="form-card hidden" id="s11">
+    <h2>11 · EPP</h2>
+    <div class="field">
+      <label>¿El conductor trae EPP (Equipo de Protección Personal)?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-epp" id="r-epp-si" value="Sí" onchange="unlock('btn-s11')"><label for="r-epp-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-epp" id="r-epp-no" value="No" onchange="unlock('btn-s11')"><label for="r-epp-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s11" disabled onclick="ir(12)">Continuar →</button></div>
+  </div>
+
+  <!-- S12: Eslingas -->
+  <div class="form-card hidden" id="s12">
+    <h2>12 · Eslingas</h2>
+    <div class="field">
+      <label>¿Trae eslingas?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-esl" id="r-esl-si" value="Sí" onchange="onEquipo('esl','f-esl-qty','btn-s12')"><label for="r-esl-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-esl" id="r-esl-no" value="No" onchange="onEquipo('esl','f-esl-qty','btn-s12')"><label for="r-esl-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="field hidden" id="f-esl-qty">
+      <label>¿Cuántas eslingas?</label>
+      <input type="number" class="qty" id="qty-esl" min="1" max="99" placeholder="0" oninput="unlock('btn-s12')">
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s12" disabled onclick="ir(13)">Continuar →</button></div>
+  </div>
+
+  <!-- S13: Trinquetes -->
+  <div class="form-card hidden" id="s13">
+    <h2>13 · Trinquetes</h2>
+    <div class="field">
+      <label>¿Trae trinquetes?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-trq" id="r-trq-si" value="Sí" onchange="onEquipo('trq','f-trq-qty','btn-s13')"><label for="r-trq-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-trq" id="r-trq-no" value="No" onchange="onEquipo('trq','f-trq-qty','btn-s13')"><label for="r-trq-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="field hidden" id="f-trq-qty">
+      <label>¿Cuántos trinquetes?</label>
+      <input type="number" class="qty" id="qty-trq" min="1" max="99" placeholder="0" oninput="unlock('btn-s13')">
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s13" disabled onclick="ir(14)">Continuar →</button></div>
+  </div>
+
+  <!-- S14: Separadores -->
+  <div class="form-card hidden" id="s14">
+    <h2>14 · Separadores</h2>
+    <div class="field">
+      <label>¿Trae separadores?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-sep" id="r-sep-si" value="Sí" onchange="onEquipo('sep','f-sep-qty','btn-s14')"><label for="r-sep-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-sep" id="r-sep-no" value="No" onchange="onEquipo('sep','f-sep-qty','btn-s14')"><label for="r-sep-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="field hidden" id="f-sep-qty">
+      <label>¿Cuántos separadores?</label>
+      <input type="number" class="qty" id="qty-sep" min="1" max="99" placeholder="0" oninput="unlock('btn-s14')">
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s14" disabled onclick="ir(15)">Continuar →</button></div>
+  </div>
+
+  <!-- S15: Candado -->
+  <div class="form-card hidden" id="s15">
+    <h2>15 · Candado de puertas</h2>
+    <div class="field">
+      <label>¿Trae candado de puertas?</label>
+      <div class="opciones">
+        <div class="op"><input type="radio" name="r-candado" id="r-can-si" value="Sí" onchange="unlock('btn-s15')"><label for="r-can-si">✅ Sí</label></div>
+        <div class="op"><input type="radio" name="r-candado" id="r-can-no" value="No" onchange="unlock('btn-s15')"><label for="r-can-no">❌ No</label></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s15" disabled onclick="ir(16)">Continuar →</button></div>
+  </div>
+
+  <!-- S16: Verificador YMS -->
+  <div class="form-card hidden" id="s16">
+    <h2>16 · Verificador YMS</h2>
+    <p class="sub">Selecciona quien realiza la verificación.</p>
+    <div class="field">
+      <label for="verificador">Nombre del verificador YMS</label>
+      <select id="verificador" onchange="if(this.value) unlock('btn-s16')">
+        <option value="">— Seleccionar —</option>
+        <option>Almendra</option>
+        <option>Belén</option>
+        <option>Miguel</option>
+      </select>
+    </div>
+    <div class="actions"><button class="btn btn-primary" id="btn-s16" disabled onclick="enviar()">✓ Confirmar y enviar</button></div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<!-- SUCCESS -->
+<div id="success" style="display:none">
+  <div class="success-card">
+    <div class="success-icon">✅</div>
+    <h2>Pre-chequeo registrado</h2>
+    <p>La verificación quedó guardada correctamente.</p>
+    <div class="success-meta" id="success-meta"></div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="nuevoChequeo()" style="justify-content:center">+ Nuevo registro</button>
+      <a class="btn btn-outline" href="/historial-prechequeo.html" style="justify-content:center">Ver historial →</a>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────
+const DESTINOS_DOBLE = new Set(['EAF1','ELS1','EPM1','EPM2','EPO1','ETM1','SAF1','SAR1','SIQ1','SLS1','SPM1','SPO1','SVL1']);
+const TOTAL_STEPS = 16;
+let csvRows = [];
+let selectedRow = null;
+let appPass = '';
+let currentStep = 0;
+let dobleCondAplica = false;
+
+// ── Gate ──────────────────────────────────────────────────────
+document.getElementById('pass').addEventListener('keydown', e => { if (e.key === 'Enter') acceder(); });
+
+function togglePass() {
+  const i = document.getElementById('pass');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+async function acceder() {
+  const pass = document.getElementById('pass').value.trim();
+  if (!pass) return;
+  appPass = pass;
+  document.getElementById('gate-error').style.display = 'none';
+  show('loading');
+  try {
+    const resp = await fetch('/api/rutas', { cache: 'no-store', headers: { 'x-app-password': pass } });
+    if (resp.status === 401) { show('gate'); document.getElementById('gate-error').style.display = 'block'; return; }
+    if (!resp.ok) throw new Error('Error al cargar datos');
+    const data = await resp.json();
+    parsearCSV(data.csv || data);
+    sessionStorage.setItem('appPass', pass);
+    show('form-wrap');
+    ir(1);
+  } catch (e) {
+    show('gate');
+    toast('❌ ' + e.message);
+  }
+}
+
+// ── CSV ───────────────────────────────────────────────────────
+function parsearCSV(raw) {
+  const lines = raw.split(/\r?\n/).filter(l => l.trim());
+  const headers = splitLine(lines[0]);
+  csvRows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitLine(lines[i]);
+    if (cols.length > 10) csvRows.push(cols.map(c => c.trim()));
+  }
+  // Poblar dropdown col K (índice 10) — únicos, ordenados
+  const patentes = [...new Set(csvRows.map(r => r[10]).filter(v => v && v !== 'sin placa de tractor'))].sort();
+  const sel = document.getElementById('patente');
+  patentes.forEach(p => {
+    const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o);
+  });
+}
+
+function splitLine(line) {
+  const res = []; let cur = ''; let q = false;
+  for (const ch of line) {
+    if (ch === '"') { q = !q; }
+    else if (ch === ',' && !q) { res.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  res.push(cur);
+  return res;
+}
+
+// ── Navegación ────────────────────────────────────────────────
+function show(id) {
+  ['gate','loading','form-wrap','success'].forEach(i => {
+    const el = document.getElementById(i);
+    el.style.display = (i === id) ? 'flex' : 'none';
+  });
+}
+
+function ir(step) {
+  // Ocultar paso actual
+  if (currentStep > 0) document.getElementById('s' + currentStep)?.classList.add('hidden');
+  currentStep = step;
+  const el = document.getElementById('s' + step);
+  if (el) { el.classList.remove('hidden'); }
+  actualizarProgress(step);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function actualizarProgress(step) {
+  const pct = Math.round(((step - 1) / TOTAL_STEPS) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('step-label').textContent = `Paso ${step} de ${TOTAL_STEPS}`;
+  document.getElementById('step-pct').textContent = pct + '%';
+}
+
+function unlock(btnId) {
+  document.getElementById(btnId).disabled = false;
+}
+
+// ── Lógica vehículo (S1) ──────────────────────────────────────
+function onPatente() {
+  const val = document.getElementById('patente').value;
+  document.getElementById('btn-s1').disabled = !val;
+  if (val) {
+    selectedRow = csvRows.find(r => r[10] === val) || null;
+  }
+}
+
+// ── Después de empresa: decidir si mostrar doble conductor ────
+function afterEmpresa() {
+  const destino = selectedRow ? (selectedRow[23] || '').trim() : '';
+  dobleCondAplica = DESTINOS_DOBLE.has(destino);
+  ir(dobleCondAplica ? 5 : 6);
+}
+
+// ── Cortina condicional (S8) ──────────────────────────────────
+function onCortina() {
+  const val = document.querySelector('input[name="r-cortina"]:checked')?.value;
+  const fFunc = document.getElementById('f-cortina-func');
+  if (val === 'Sí') {
+    fFunc.classList.remove('hidden');
+    document.getElementById('btn-s8').disabled = true;
+  } else {
+    fFunc.classList.add('hidden');
+    unlock('btn-s8');
+  }
+}
+
+// ── Equipamiento con cantidad ─────────────────────────────────
+function onEquipo(nombre, fQtyId, btnId) {
+  const val = document.querySelector(`input[name="r-${nombre}"]:checked`)?.value;
+  const fq = document.getElementById(fQtyId);
+  if (val === 'Sí') {
+    fq.classList.remove('hidden');
+    document.getElementById(btnId).disabled = true;
+  } else {
+    fq.classList.add('hidden');
+    unlock(btnId);
+  }
+}
+
+// ── Enviar ────────────────────────────────────────────────────
+function getR(name) { return document.querySelector(`input[name="${name}"]:checked`)?.value || ''; }
+function getQty(id) { return document.getElementById(id).value || '0'; }
+
+async function enviar() {
+  const ahora = new Date();
+  const reg = {
+    fecha_hora:       ahora.toLocaleString('es-CL'),
+    fecha:            ahora.toLocaleDateString('es-CL'),
+    hora:             ahora.toLocaleTimeString('es-CL'),
+    patente:          document.getElementById('patente').value,
+    conductor_sist:   document.getElementById('ib-conductor').textContent,
+    coincide_cond:    getR('r-conductor'),
+    tipo_sist:        document.getElementById('ib-tipo').textContent,
+    coincide_tipo:    getR('r-tipo'),
+    empresa_sist:     document.getElementById('ib-empresa').textContent,
+    coincide_empresa: getR('r-empresa'),
+    doble_conductor:  dobleCondAplica ? getR('r-doble-cond') : 'N/A',
+    doble_llave:      getR('r-llave'),
+    enc_automatico:   getR('r-enc'),
+    tiene_cortina:    getR('r-cortina'),
+    cortina_funciona: getR('r-cortina') === 'Sí' ? getR('r-cortina-func') : 'N/A',
+    goteras:          getR('r-goteras'),
+    sensor_retroceso: getR('r-sensor'),
+    epp:              getR('r-epp'),
+    eslingas:         getR('r-esl'),
+    eslingas_cant:    getR('r-esl') === 'Sí' ? getQty('qty-esl') : '0',
+    trinquetes:       getR('r-trq'),
+    trinquetes_cant:  getR('r-trq') === 'Sí' ? getQty('qty-trq') : '0',
+    separadores:      getR('r-sep'),
+    separadores_cant: getR('r-sep') === 'Sí' ? getQty('qty-sep') : '0',
+    candado:          getR('r-candado'),
+    verificador_yms:  document.getElementById('verificador').value,
+    destino_ruta:     selectedRow ? (selectedRow[23] || '') : '',
+  };
+
+  const btn = document.getElementById('btn-s16');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Guardando…';
+
+  try {
+    const resp = await fetch('/api/prechequeo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-app-password': appPass },
+      body: JSON.stringify(reg),
+    });
+    if (!resp.ok) throw new Error('Error al guardar');
+
+    // Mostrar resumen
+    document.getElementById('success-meta').innerHTML =
+      `<b>Patente:</b> ${reg.patente}<br>` +
+      `<b>Conductor:</b> ${reg.conductor_sist}<br>` +
+      `<b>Verificador:</b> ${reg.verificador_yms}<br>` +
+      `<b>Fecha y hora:</b> ${reg.fecha_hora}`;
+    show('success');
+  } catch (e) {
+    toast('❌ ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '✓ Confirmar y enviar';
+  }
+}
+
+// ── Nuevo chequeo ─────────────────────────────────────────────
+function nuevoChequeo() {
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.querySelectorAll('input[type="number"]').forEach(n => n.value = '');
+  document.getElementById('verificador').value = '';
+  document.getElementById('patente').value = '';
+  ['f-cortina-func','f-esl-qty','f-trq-qty','f-sep-qty'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.querySelectorAll('[id^="btn-s"]').forEach(b => b.disabled = true);
+  selectedRow = null;
+  currentStep = 0;
+  show('form-wrap');
+  ir(1);
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// Restaurar sesión si hay contraseña guardada
+const saved = sessionStorage.getItem('appPass');
+if (saved) { document.getElementById('pass').value = saved; }
+</script>
+</body>
+</html>

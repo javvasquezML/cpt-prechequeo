@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FFE600">
+<title>Historial Pre-Chequeo — CPT</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wrap { display: flex; flex-direction: column; align-items: center; padding: 28px 20px 60px; }
+  .toolbar { max-width: 900px; width: 100%; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .toolbar input { flex: 1; min-width: 180px; background: #fff; border: 1px solid var(--border-strong); color: var(--text); padding: 10px 14px; border-radius: 6px; font-size: 14px; outline: none; }
+  .toolbar input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(52,131,250,.15); }
+  table { border-collapse: collapse; width: 100%; max-width: 900px; background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); font-size: 13px; }
+  th { background: var(--brand-navy); color: #fff; padding: 11px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .badge-ok { background: rgba(0,166,80,.12); color: #006633; border: 1px solid rgba(0,166,80,.3); border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+  .badge-no { background: rgba(242,61,79,.1); color: #c11d2c; border: 1px solid rgba(242,61,79,.3); border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+  .badge-na { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); border-radius: 4px; padding: 1px 7px; font-size: 11px; }
+  .empty { text-align: center; color: var(--text-muted); padding: 60px 20px; }
+  .gate { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
+  .gate-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px; max-width: 380px; width: 100%; text-align: center; box-shadow: var(--shadow); }
+  .pass-wrap { text-align: left; margin-bottom: 16px; }
+  .pass-wrap label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+  .pass-wrap input { width: 100%; background: #fff; border: 1px solid var(--border-strong); color: var(--text); padding: 11px 14px; border-radius: 6px; font-size: 14px; outline: none; }
+  .pass-wrap input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(52,131,250,.15); }
+  @media (max-width: 700px) {
+    table { font-size: 12px; }
+    th, td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-left">
+    <a class="logo" href="/">🚚</a>
+    <div>
+      <h1>Shipping <span>· Historial Pre-Chequeo</span></h1>
+      <div class="brand-sub">Mercado Libre</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a class="btn btn-outline" href="/prechequeo.html">+ Nuevo</a>
+    <a class="btn btn-outline" href="/">← Menú</a>
+  </div>
+</header>
+
+<div id="gate" class="gate">
+  <div class="gate-card">
+    <div style="font-size:48px;margin-bottom:12px">📋</div>
+    <h2 style="font-size:20px;color:var(--brand-navy);margin-bottom:6px">Historial de registros</h2>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:22px">Ingresa la contraseña para ver el historial.</p>
+    <div class="pass-wrap">
+      <label>Contraseña</label>
+      <input type="password" id="pass" placeholder="Contraseña de acceso">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="cargar()">Ver historial →</button>
+    <p id="gate-err" style="color:var(--red);font-size:13px;margin-top:12px;display:none">Contraseña incorrecta</p>
+  </div>
+</div>
+
+<div id="main" class="wrap" style="display:none">
+  <div class="toolbar">
+    <input type="text" id="buscar" placeholder="Buscar por patente, conductor, verificador…" oninput="filtrar()">
+    <button class="btn btn-outline" onclick="exportar()">⬇ Exportar CSV</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha y hora</th>
+        <th>Patente</th>
+        <th>Conductor</th>
+        <th>Empresa</th>
+        <th>Cond.✓</th>
+        <th>Tipo✓</th>
+        <th>EPP</th>
+        <th>Cortina</th>
+        <th>Goteras</th>
+        <th>Candado</th>
+        <th>Verificador</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <p id="empty" class="empty" style="display:none">No hay registros aún.</p>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let todos = [];
+let appPass = '';
+
+document.getElementById('pass').addEventListener('keydown', e => { if (e.key === 'Enter') cargar(); });
+
+async function cargar() {
+  const pass = document.getElementById('pass').value.trim();
+  if (!pass) return;
+  appPass = pass;
+  document.getElementById('gate-err').style.display = 'none';
+  try {
+    const resp = await fetch('/api/prechequeo', { headers: { 'x-app-password': pass } });
+    if (resp.status === 401) { document.getElementById('gate-err').style.display = 'block'; return; }
+    const data = await resp.json();
+    todos = data.registros || [];
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('main').style.display = 'flex';
+    renderizar(todos);
+  } catch (e) {
+    toast('❌ Error al cargar: ' + e.message);
+  }
+}
+
+function badge(val) {
+  if (!val || val === 'N/A') return `<span class="badge-na">N/A</span>`;
+  if (val === 'Sí') return `<span class="badge-ok">Sí</span>`;
+  if (val === 'No') return `<span class="badge-no">No</span>`;
+  return val;
+}
+
+function renderizar(rows) {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  document.getElementById('empty').style.display = rows.length ? 'none' : 'block';
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="white-space:nowrap">${r.fecha_hora || ''}</td>
+      <td><b>${r.patente || ''}</b></td>
+      <td>${r.conductor_sist || ''}</td>
+      <td>${r.empresa_sist || ''}</td>
+      <td>${badge(r.coincide_cond)}</td>
+      <td>${badge(r.coincide_tipo)}</td>
+      <td>${badge(r.epp)}</td>
+      <td>${badge(r.tiene_cortina)}</td>
+      <td>${badge(r.goteras)}</td>
+      <td>${badge(r.candado)}</td>
+      <td>${r.verificador_yms || ''}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filtrar() {
+  const q = document.getElementById('buscar').value.toLowerCase();
+  renderizar(todos.filter(r =>
+    (r.patente || '').toLowerCase().includes(q) ||
+    (r.conductor_sist || '').toLowerCase().includes(q) ||
+    (r.verificador_yms || '').toLowerCase().includes(q) ||
+    (r.empresa_sist || '').toLowerCase().includes(q)
+  ));
+}
+
+function exportar() {
+  if (!todos.length) return;
+  const cols = Object.keys(todos[0]);
+  const csv = [cols.join(','), ...todos.map(r => cols.map(c => `"${(r[c] || '').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
+  a.download = `prechequeo_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+const saved = sessionStorage.getItem('appPass');
+if (saved) { document.getElementById('pass').value = saved; }
+</script>
+</body>
+</html>
