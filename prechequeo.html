@@ -520,7 +520,7 @@ async function acceder() {
   try {
     const resp = await fetch('/api/rutas', { cache: 'no-store', headers: { 'x-app-password': pass } });
     if (resp.status === 401) { show('gate'); document.getElementById('gate-error').style.display = 'block'; return; }
-    if (!resp.ok) throw new Error('Error al cargar datos');
+    if (!resp.ok) { const d = await resp.json().catch(() => ({})); throw new Error(d.error || 'Error al cargar datos'); }
     const data = await resp.json();
     parsearCSV(data.csv || data);
     sessionStorage.setItem('appPass', pass);
