@@ -1,7 +1,7 @@
-const { list, head } = require('@vercel/blob');
+const { list } = require('@vercel/blob');
 
 const APP_PASS = process.env.APP_PASSWORD;
-const BLOB_KEY = 'prechequeo/rutas.csv';
+const BLOB_KEY = 'rutas.csv';
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,15 +14,15 @@ module.exports = async (req, res) => {
   if (!APP_PASS || pass !== APP_PASS) return res.status(401).json({ error: 'No autorizado' });
 
   try {
-    const { blobs } = await list({ prefix: BLOB_KEY });
+    const { blobs } = await list({ prefix: BLOB_KEY, token: process.env.CSV_READ_WRITE_TOKEN });
     if (!blobs.length) return res.status(404).json({ error: 'No hay CSV cargado aún' });
 
-    const info = await head(blobs[0].url);
-    const resp = await fetch(info.downloadUrl);
+    // El blob es público — se puede leer directamente con fetch
+    const resp = await fetch(blobs[0].url);
     if (!resp.ok) return res.status(500).json({ error: `HTTP ${resp.status} al leer CSV` });
 
     const csv = await resp.text();
-    return res.status(200).json({ csv, uploadedAt: info.uploadedAt });
+    return res.status(200).json({ csv, uploadedAt: blobs[0].uploadedAt });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }

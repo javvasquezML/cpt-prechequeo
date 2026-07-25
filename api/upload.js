@@ -1,7 +1,7 @@
 const { put } = require('@vercel/blob');
 
 const UPLOAD_PASS = process.env.APP_PASSWORD;
-const BLOB_KEY = 'prechequeo/rutas.csv';
+const BLOB_KEY = 'rutas.csv';
 
 function leerBody(req) {
   return new Promise((resolve, reject) => {
@@ -25,7 +25,13 @@ module.exports = async (req, res) => {
   try {
     const body = await leerBody(req);
     if (!body || body.length < 10) return res.status(400).json({ error: 'Archivo vacío' });
-    await put(BLOB_KEY, body, { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'text/plain; charset=utf-8' });
+    await put(BLOB_KEY, body, {
+      access: 'public',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: 'text/plain; charset=utf-8',
+      token: process.env.CSV_READ_WRITE_TOKEN,
+    });
     return res.status(200).json({ ok: true, uploadedAt: new Date().toISOString() });
   } catch (e) {
     return res.status(500).json({ error: e.message });
