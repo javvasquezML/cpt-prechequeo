@@ -19,10 +19,12 @@ module.exports = async (req, res) => {
 
     const blob = blobs[0];
     const token = process.env.BLOB_READ_WRITE_TOKEN;
-    const resp = await fetch(blob.url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!resp.ok) throw new Error('No se pudo leer el archivo');
+
+    // Intentar con token primero, luego sin token
+    let resp = await fetch(blob.url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!resp.ok) resp = await fetch(blob.url);
+    if (!resp.ok) return res.status(500).json({ error: `HTTP ${resp.status} al leer blob: ${blob.url.slice(0, 60)}` });
+
     const csv = await resp.text();
     return res.status(200).json({ csv, uploadedAt: blob.uploadedAt });
   } catch (e) {
