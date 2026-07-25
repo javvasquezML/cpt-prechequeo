@@ -51,6 +51,12 @@
   .op input:checked + label { border-color: var(--brand-blue); background: var(--brand-blue); color: #fff; }
   .op label:hover { border-color: var(--brand-blue); background: rgba(52,131,250,.06); }
 
+  /* ── Checkbox EPP ── */
+  .check-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 12px; border: 2px solid var(--border-strong); border-radius: 8px; transition: all .15s; }
+  .check-item:hover { border-color: var(--red, #f23d4f); background: rgba(242,61,79,.05); }
+  .check-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red, #f23d4f); cursor: pointer; flex-shrink: 0; }
+  .check-item:has(input:checked) { border-color: var(--red, #f23d4f); background: rgba(242,61,79,.08); color: #c11d2c; }
+
   /* ── Condicional ── */
   .cond { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
   .cond.visible { display: block; }
@@ -287,12 +293,19 @@
 
     <!-- S11: EPP -->
     <div class="seccion">
-      <h3>11 · EPP</h3>
+      <h3>11 · EPP (Calzado, Chaleco)</h3>
       <div class="field">
-        <label>¿El conductor trae EPP?</label>
+        <label>¿El conductor trae EPP completo?</label>
         <div class="opciones">
-          <div class="op"><input type="radio" name="r-epp" id="r-epp-si" value="Sí"><label for="r-epp-si">✅ Sí</label></div>
-          <div class="op"><input type="radio" name="r-epp" id="r-epp-no" value="No"><label for="r-epp-no">❌ No</label></div>
+          <div class="op"><input type="radio" name="r-epp" id="r-epp-si" value="Sí" onchange="onEpp()"><label for="r-epp-si">✅ Sí</label></div>
+          <div class="op"><input type="radio" name="r-epp" id="r-epp-no" value="No" onchange="onEpp()"><label for="r-epp-no">❌ No</label></div>
+        </div>
+        <div class="cond" id="cond-epp">
+          <label style="margin-bottom:10px">Marcar lo que falta:</label>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label class="check-item"><input type="checkbox" id="epp-calzado" value="Calzado"> Calzado</label>
+            <label class="check-item"><input type="checkbox" id="epp-chaleco" value="Chaleco"> Chaleco</label>
+          </div>
         </div>
       </div>
     </div>
@@ -542,6 +555,16 @@ function onPatente() {
 }
 
 // ── Condicionales ─────────────────────────────────────────────
+function onEpp() {
+  const val = getR('r-epp');
+  const cond = document.getElementById('cond-epp');
+  cond.classList.toggle('visible', val === 'No');
+  if (val !== 'No') {
+    document.getElementById('epp-calzado').checked = false;
+    document.getElementById('epp-chaleco').checked = false;
+  }
+}
+
 function onCortina() {
   const val = getR('r-cortina');
   document.getElementById('cond-cortina').classList.toggle('visible', val === 'Sí');
@@ -580,6 +603,7 @@ async function enviar() {
     goteras: getR('r-goteras'),
     sensor_retroceso: getR('r-sensor'),
     epp: getR('r-epp'),
+    epp_faltante: getR('r-epp') === 'No' ? [document.getElementById('epp-calzado').checked ? 'Calzado' : '', document.getElementById('epp-chaleco').checked ? 'Chaleco' : ''].filter(Boolean).join(', ') || 'Sin especificar' : 'N/A',
     eslingas: getR('r-esl'),
     eslingas_cant: getR('r-esl') === 'Sí' ? getQty('qty-esl') : '0',
     trinquetes: getR('r-trq'),
@@ -621,6 +645,8 @@ function nuevoChequeo() {
   document.querySelectorAll('input[type="number"]').forEach(n => n.value = '');
   document.getElementById('verificador').value = '';
   document.getElementById('comentarios').value = '';
+  document.getElementById('epp-calzado').checked = false;
+  document.getElementById('epp-chaleco').checked = false;
   document.getElementById('patente').value = '';
   document.querySelectorAll('.cond').forEach(c => c.classList.remove('visible'));
   document.getElementById('s-doble-cond').style.display = 'none';
