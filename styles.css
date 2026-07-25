@@ -1,0 +1,234 @@
+/* ─────────────────────────────────────────────
+   Mercado Libre · Shipping — Sistema de Rutas
+   Sistema de diseño (identidad Mercado Libre)
+   ───────────────────────────────────────────── */
+:root {
+  /* Fuerza tema claro: evita que el navegador (modo oscuro forzado del
+     celular) invierta o reescriba los colores del sitio. */
+  color-scheme: light only;
+
+  /* Colores de marca */
+  --brand-yellow: #FFE600;
+  --brand-yellow-dark: #FFDB15;
+  --brand-navy: #2D3277;          /* azul institucional */
+  --brand-blue: #3483FA;          /* azul de acción */
+  --brand-blue-dark: #2968C8;
+
+  /* Superficies (tema claro) */
+  --bg: #ededed;
+  --surface: #ffffff;
+  --surface2: #f5f5f5;
+  --border: rgba(0,0,0,.08);
+  --border-strong: rgba(0,0,0,.15);
+
+  /* Texto */
+  --text: rgba(0,0,0,.9);
+  --text-muted: rgba(0,0,0,.55);
+
+  /* Semánticos */
+  --accent: #3483FA;             /* acciones / links */
+  --accent2: #2D3277;            /* patentes / detalle */
+  --green: #00A650;              /* verde éxito */
+  --yellow: #C77700;             /* texto ámbar legible sobre claro */
+  --red: #F23D4F;                /* rojo error */
+  --blue: #3483FA;
+
+  --radius: 6px;
+  --shadow: 0 1px 2px rgba(0,0,0,.12), 0 0 1px rgba(0,0,0,.08);
+  --shadow-md: 0 6px 16px rgba(0,0,0,.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Proxima Nova', -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header (barra amarilla) ── */
+header {
+  background: var(--brand-yellow);
+  border-bottom: 1px solid var(--brand-yellow-dark);
+  padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.logo {
+  width: 38px; height: 38px;
+  background: var(--brand-navy);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+}
+header h1 { font-size: 17px; font-weight: 700; color: var(--brand-navy); letter-spacing: -.2px; }
+header h1 span { color: var(--brand-navy); opacity: .65; font-weight: 600; }
+.brand-sub { font-size: 11px; font-weight: 600; color: var(--brand-navy); opacity: .7; text-transform: uppercase; letter-spacing: .08em; }
+.badge {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  background: var(--brand-navy); color: #fff;
+  padding: 3px 10px; border-radius: 20px; text-transform: uppercase;
+}
+.header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.date-label {
+  font-size: 12px; font-weight: 600; color: var(--brand-navy);
+  background: rgba(255,255,255,.55); border: 1px solid rgba(0,0,0,.08);
+  padding: 6px 12px; border-radius: 6px;
+}
+
+/* ── Botones ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 6px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  border: none; transition: background .15s, box-shadow .15s, transform .08s;
+  text-decoration: none; font-family: inherit; white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--brand-blue); color: #fff; }
+.btn-primary:hover { background: var(--brand-blue-dark); }
+.btn-outline { background: #fff; color: var(--brand-navy); border: 1px solid var(--border-strong); }
+.btn-outline:hover { background: #f0f4ff; border-color: var(--brand-blue); color: var(--brand-blue); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ── Card genérica ── */
+.card, .stat-card, .table-wrap, .route-card, .menu-card, .empty-card, .modal {
+  box-shadow: var(--shadow);
+}
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #333; border: none; color: #fff;
+  border-radius: 8px; padding: 13px 18px; font-size: 14px; font-weight: 500;
+  transform: translateY(80px); opacity: 0; transition: all .3s;
+  pointer-events: none; z-index: 999; display: flex; align-items: center; gap: 8px;
+  max-width: 360px; box-shadow: var(--shadow-md);
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── Warnings de ramplas (riesgo) ── */
+.warns { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.warn {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 4px;
+  letter-spacing: .02em; white-space: nowrap; line-height: 1.5;
+}
+.warn::before { content: '⚠'; font-size: 9px; }
+.warn-mp   { background: rgba(255,119,51,.15); color: #b64a00; border: 1px solid rgba(255,119,51,.45); }
+.warn-piso { background: rgba(242,61,79,.12);  color: #c11d2c; border: 1px solid rgba(242,61,79,.45); }
+.warn-ru   { background: rgba(52,131,250,.12); color: #2765c4; border: 1px solid rgba(52,131,250,.45); }
+
+/* ── Patente prioridad (destacada, no dar de baja) ── */
+.plate-prio {
+  background: var(--brand-yellow) !important;
+  color: var(--brand-navy) !important;
+  border-color: var(--brand-yellow-dark) !important;
+  box-shadow: 0 0 0 2px rgba(255,230,0,.35);
+}
+.prio-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9px; font-weight: 800; letter-spacing: .02em;
+  background: var(--brand-navy); color: #fff;
+  padding: 1px 6px; border-radius: 4px; margin-left: 4px; white-space: nowrap;
+}
+.prio-badge::before { content: '🔒'; font-size: 9px; }
+
+/* Prioridad 1: nivel máximo, siempre destacado (ej. equipo fijo HXFB24) */
+.plate-prio1 {
+  background: var(--red) !important;
+  color: #fff !important;
+  border-color: #c11d2c !important;
+  box-shadow: 0 0 0 2px rgba(242,61,79,.3);
+}
+.prio1-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9px; font-weight: 800; letter-spacing: .02em;
+  background: var(--red); color: #fff;
+  padding: 1px 6px; border-radius: 4px; margin-left: 4px; white-space: nowrap;
+}
+.prio1-badge::before { content: '⭐'; font-size: 9px; }
+
+/* ── Leyenda de alertas ── */
+.legend {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 12px; color: var(--text-muted);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; margin-bottom: 14px;
+}
+.legend-title { font-weight: 700; color: var(--text); }
+.legend .sep { color: var(--border-strong); }
+
+/* ── Alerta de seguridad (al abrir la página) ── */
+.safety-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 600; padding: 20px; opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.safety-overlay.show { opacity: 1; pointer-events: all; }
+.safety-card {
+  background: #fff; border-radius: 16px; padding: 0; max-width: 440px; width: 100%;
+  box-shadow: 0 20px 50px rgba(0,0,0,.35); overflow: hidden;
+  transform: scale(.92) translateY(10px); transition: transform .25s;
+}
+.safety-overlay.show .safety-card { transform: scale(1) translateY(0); }
+.safety-head {
+  background: var(--brand-yellow); padding: 18px 22px; text-align: center;
+}
+.safety-head .safety-icon { font-size: 34px; }
+.safety-head h2 { color: var(--brand-navy); font-size: 17px; margin-top: 6px; }
+.safety-body { padding: 18px 22px; }
+.safety-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.safety-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; font-size: 13px; font-weight: 600; color: var(--text);
+}
+.safety-item .si-ico { font-size: 18px; flex-shrink: 0; }
+.safety-adn {
+  background: var(--brand-navy); color: #fff; border-radius: 10px;
+  padding: 12px 14px; text-align: center; margin-bottom: 16px;
+}
+.safety-adn .sa-tag { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-yellow); }
+.safety-adn .sa-msg { font-size: 15px; font-weight: 800; margin-top: 4px; }
+.safety-body .btn { width: 100%; justify-content: center; }
+
+/* ── Huevo de pascua: capibara ── */
+.capi-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500; opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.capi-overlay.show { opacity: 1; pointer-events: all; }
+.capi-card {
+  background: #fff; border-radius: 18px; padding: 24px 30px 18px;
+  text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  transform: scale(.85) translateY(10px); transition: transform .25s;
+  max-width: 320px;
+}
+.capi-overlay.show .capi-card { transform: scale(1) translateY(0); }
+.capi-card svg { width: 220px; height: auto; }
+.capi-card p { margin-top: 10px; font-weight: 700; color: var(--brand-navy); font-size: 15px; }
+.capi-card .capi-sub { font-weight: 500; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.capi-close { margin-top: 14px; }
+
+/* ── Mobile: modales emergentes (seguridad, capibara) ── */
+@media (max-width: 480px) {
+  .safety-card, .capi-card { max-height: 85vh; overflow-y: auto; }
+  .safety-head { padding: 14px 16px; }
+  .safety-body { padding: 14px 16px; }
+  .safety-card, .capi-card { max-width: 100%; }
+}
+
+/* ── Etiqueta de área ── */
+.dev-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: .07em;
+  background: var(--brand-yellow); color: var(--brand-navy);
+  padding: 6px 16px; border-radius: 20px; text-transform: uppercase;
+}
