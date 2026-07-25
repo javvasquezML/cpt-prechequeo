@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/javvasquezML/cpt-prechequeo#readme",
   "dependencies": {
-    "@vercel/kv": "^3.0.0"
+    "@vercel/blob": "^2.6.1"
   }
 }

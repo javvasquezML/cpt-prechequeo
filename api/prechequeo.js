@@ -2,10 +2,20 @@
 // POST: guarda un registro de pre-chequeo
 // GET:  devuelve todos los registros (historial)
 
-const { kv } = require('@vercel/kv');
+const { put, head, getDownloadUrl } = require('@vercel/blob');
 
 const APP_PASS = process.env.APP_PASSWORD;
-const KEY = 'prechequeo:registros';
+const BLOB_KEY = 'prechequeo/registros.json';
+
+async function leerRegistros() {
+  try {
+    const info = await head(BLOB_KEY);
+    const resp = await fetch(info.downloadUrl);
+    return await resp.json();
+  } catch (_) {
+    return [];
+  }
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,9 +33,10 @@ module.exports = async (req, res) => {
     try {
       const reg = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       reg.id = Date.now().toString();
-      await kv.lpush(KEY, JSON.stringify(reg));
-      // Mantener solo los últimos 500 registros
-      await kv.ltrim(KEY, 0, 499);
+      const registros = await leerRegistros();
+      registros.unshift(reg);
+      const recientes = registros.slice(0, 500);
+      await put(BLOB_KEY, JSON.stringify(recientes), { access: 'public', addRandomSuffix: false });
       return res.status(200).json({ ok: true, id: reg.id });
     } catch (e) {
       return res.status(500).json({ error: e.message });
@@ -34,8 +45,7 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     try {
-      const items = await kv.lrange(KEY, 0, 499);
-      const registros = items.map(i => typeof i === 'string' ? JSON.parse(i) : i);
+      const registros = await leerRegistros();
       return res.status(200).json({ registros });
     } catch (e) {
       return res.status(500).json({ error: e.message });
