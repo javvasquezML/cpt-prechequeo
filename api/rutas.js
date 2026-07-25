@@ -1,4 +1,4 @@
-const { list, download } = require('@vercel/blob');
+const { list } = require('@vercel/blob');
 
 const APP_PASS = process.env.APP_PASSWORD;
 const BLOB_KEY = 'prechequeo/rutas.csv';
@@ -16,11 +16,14 @@ module.exports = async (req, res) => {
   try {
     const { blobs } = await list({ prefix: BLOB_KEY });
     if (!blobs.length) return res.status(404).json({ error: 'No hay CSV cargado aún' });
+
     const blob = blobs[0];
-    const { body } = await download(blob.url);
-    const chunks = [];
-    for await (const chunk of body) chunks.push(chunk);
-    const csv = Buffer.concat(chunks).toString('utf-8');
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    const resp = await fetch(blob.url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) throw new Error('No se pudo leer el archivo');
+    const csv = await resp.text();
     return res.status(200).json({ csv, uploadedAt: blob.uploadedAt });
   } catch (e) {
     return res.status(500).json({ error: e.message });
