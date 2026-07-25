@@ -492,7 +492,7 @@ async function subirCSV() {
       body: text,
     });
     if (resp.status === 401) throw new Error('Contraseña incorrecta');
-    if (!resp.ok) throw new Error('Error al subir');
+    if (!resp.ok) { const d = await resp.json().catch(() => ({})); throw new Error(d.error || 'Error al subir'); }
     sessionStorage.setItem('appPass', pass);
     toast('✅ CSV cargado correctamente');
     setTimeout(() => { document.getElementById('pass').value = pass; show('gate'); }, 800);

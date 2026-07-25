@@ -4,6 +4,16 @@ const { put } = require('@vercel/blob');
 const UPLOAD_PASS = process.env.APP_PASSWORD;
 const BLOB_KEY = 'prechequeo/rutas.csv';
 
+// Leer cuerpo raw de la request
+function leerBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => data += chunk.toString());
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -18,10 +28,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-    await put(BLOB_KEY, body, { access: 'public', addRandomSuffix: false, contentType: 'text/plain' });
+    const body = await leerBody(req);
+    if (!body || body.length < 10) return res.status(400).json({ error: 'Archivo vacío o inválido' });
+    await put(BLOB_KEY, body, { access: 'public', addRandomSuffix: false, contentType: 'text/plain; charset=utf-8' });
     return res.status(200).json({ ok: true, uploadedAt: new Date().toISOString() });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
 };
+
+module.exports.config = { api: { bodyParser: false } };
