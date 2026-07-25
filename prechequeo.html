@@ -9,7 +9,8 @@
 <link rel="stylesheet" href="styles.css">
 <style>
   /* ── Layout ── */
-  #gate, #loading, #form-wrap, #success { display: none; }
+  #csv-upload, #gate, #loading, #form-wrap, #success { display: none; }
+  #csv-upload { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
   #gate { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); padding: 40px 20px; }
   #loading { flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 65px); gap: 16px; }
   #form-wrap { flex-direction: column; align-items: center; padding: 28px 20px 60px; }
@@ -88,10 +89,25 @@
   .hidden { display: none !important; }
 
   @media (max-width: 600px) {
-    .form-card, .gate-card { padding: 22px 18px; border-radius: 12px; }
-    #form-wrap, #gate, #success { padding: 16px 14px 50px; }
+    .form-card, .gate-card { padding: 20px 16px; border-radius: 12px; }
+    #form-wrap, #gate, #success, #csv-upload { padding: 12px 12px 50px; }
     .opciones { flex-direction: column; }
     .op { min-width: unset; }
+    .progress-wrap { padding: 0 2px; }
+    .actions { flex-direction: column; }
+    .actions .btn { width: 100%; justify-content: center; }
+    header { padding: 10px 14px; flex-wrap: nowrap; }
+    header h1 { font-size: 14px; }
+    .brand-sub { font-size: 10px; }
+    .logo { width: 30px; height: 30px; font-size: 14px; }
+    .badge { display: none; }
+    .header-actions .btn { padding: 7px 10px; font-size: 12px; }
+    .info-box .ib-value { font-size: 14px; }
+    .gate-icon { font-size: 40px; }
+    .gate-card h2 { font-size: 18px; }
+    .success-card { padding: 28px 18px; }
+    .success-icon { font-size: 44px; }
+    input[type="number"].qty { width: 90px; }
   }
 </style>
 </head>
@@ -110,6 +126,33 @@
     <a class="btn btn-outline" href="/">← Menú</a>
   </div>
 </header>
+
+<!-- CSV UPLOAD (admin) -->
+<div id="csv-upload" style="display:flex">
+  <div class="gate-card">
+    <div class="gate-icon">📁</div>
+    <h2>Cargar CSV de rutas</h2>
+    <p>Sube el archivo diario antes de usar el formulario.</p>
+    <div class="pass-wrap">
+      <label>Contraseña de administrador</label>
+      <input type="password" id="csv-pass" placeholder="Contraseña">
+    </div>
+    <div id="drop-zone" style="border:2px dashed var(--border-strong);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;margin-bottom:16px;transition:all .2s" onclick="document.getElementById('csv-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--brand-blue)'" ondragleave="this.style.borderColor='var(--border-strong)'" ondrop="onDrop(event)">
+      <div style="font-size:36px;margin-bottom:8px">📋</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Arrastra el CSV aquí o haz clic para seleccionarlo</p>
+      <button class="btn btn-primary" type="button" onclick="event.stopPropagation();document.getElementById('csv-file').click()">Seleccionar archivo</button>
+    </div>
+    <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="onFileSelect(this.files[0])">
+    <div id="csv-chosen" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:13px">
+      <b id="csv-name"></b><br><span id="csv-size" style="color:var(--text-muted)"></span>
+    </div>
+    <button class="btn btn-primary" id="btn-upload-csv" style="width:100%;justify-content:center;display:none" onclick="subirCSV()">⬆ Subir y continuar</button>
+    <div style="margin-top:16px;text-align:center">
+      <a href="#" onclick="show('gate');return false" style="font-size:13px;color:var(--brand-blue)">Ya cargué el CSV, ir al formulario →</a>
+    </div>
+    <p id="csv-error" style="color:var(--red);font-size:13px;margin-top:12px;display:none"></p>
+  </div>
+</div>
 
 <!-- GATE: contraseña -->
 <div id="gate" style="display:flex">
@@ -411,6 +454,54 @@ let selectedRow = null;
 let appPass = '';
 let currentStep = 0;
 let dobleCondAplica = false;
+
+// ── Inicio ────────────────────────────────────────────────────
+// Mostrar pantalla de carga CSV al inicio
+show('csv-upload');
+
+// ── CSV Upload ────────────────────────────────────────────────
+let csvFile = null;
+function onFileSelect(f) {
+  if (!f) return;
+  csvFile = f;
+  document.getElementById('csv-name').textContent = f.name;
+  document.getElementById('csv-size').textContent = (f.size/1024).toFixed(1) + ' KB';
+  document.getElementById('csv-chosen').style.display = 'block';
+  document.getElementById('btn-upload-csv').style.display = 'block';
+}
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = 'var(--border-strong)';
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.toLowerCase().endsWith('.csv')) onFileSelect(f);
+  else toast('⚠️ Debe ser un archivo .csv');
+}
+async function subirCSV() {
+  const pass = document.getElementById('csv-pass').value.trim();
+  if (!pass) { toast('🔒 Ingresa la contraseña'); return; }
+  if (!csvFile) return;
+  const btn = document.getElementById('btn-upload-csv');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Subiendo…';
+  const errEl = document.getElementById('csv-error');
+  errEl.style.display = 'none';
+  try {
+    const text = await csvFile.text();
+    const resp = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', 'x-upload-password': pass },
+      body: text,
+    });
+    if (resp.status === 401) throw new Error('Contraseña incorrecta');
+    if (!resp.ok) throw new Error('Error al subir');
+    sessionStorage.setItem('appPass', pass);
+    toast('✅ CSV cargado correctamente');
+    setTimeout(() => { document.getElementById('pass').value = pass; show('gate'); }, 800);
+  } catch (e) {
+    errEl.textContent = '❌ ' + e.message; errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.innerHTML = '⬆ Subir y continuar';
+  }
+}
 
 // ── Gate ──────────────────────────────────────────────────────
 document.getElementById('pass').addEventListener('keydown', e => { if (e.key === 'Enter') acceder(); });
