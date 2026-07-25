@@ -66,6 +66,7 @@
   <div class="toolbar">
     <input type="text" id="buscar" placeholder="Buscar por patente, conductor, verificador…" oninput="filtrar()">
     <button class="btn btn-outline" onclick="exportar()">⬇ Exportar CSV</button>
+    <button id="btn-borrar" class="btn" style="display:none;background:#f23d4f;color:#fff;border:none" onclick="borrarHistorial()">🗑 Borrar historial</button>
   </div>
   <table>
     <thead>
@@ -106,6 +107,7 @@ async function cargar() {
     if (resp.status === 401) { document.getElementById('gate-err').style.display = 'block'; return; }
     const data = await resp.json();
     todos = data.registros || [];
+    if (data.isAdmin) document.getElementById('btn-borrar').style.display = '';
     document.getElementById('gate').style.display = 'none';
     document.getElementById('main').style.display = 'flex';
     renderizar(todos);
@@ -162,6 +164,17 @@ function exportar() {
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
   a.download = `prechequeo_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+}
+
+async function borrarHistorial() {
+  if (!confirm('¿Seguro que quieres borrar todo el historial? Esta acción no se puede deshacer.')) return;
+  try {
+    const resp = await fetch('/api/prechequeo', { method: 'DELETE', headers: { 'x-app-password': appPass } });
+    if (!resp.ok) { toast('❌ Error al borrar'); return; }
+    todos = [];
+    renderizar([]);
+    toast('✅ Historial borrado');
+  } catch (e) { toast('❌ Error: ' + e.message); }
 }
 
 function toast(msg) {
