@@ -53,9 +53,11 @@
 
   /* ── Checkbox EPP ── */
   .check-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 12px; border: 2px solid var(--border-strong); border-radius: 8px; transition: all .15s; }
-  .check-item:hover { border-color: var(--red, #f23d4f); background: rgba(242,61,79,.05); }
-  .check-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red, #f23d4f); cursor: pointer; flex-shrink: 0; }
-  .check-item:has(input:checked) { border-color: var(--red, #f23d4f); background: rgba(242,61,79,.08); color: #c11d2c; }
+  .check-item:hover { border-color: #f23d4f; background: rgba(242,61,79,.05); }
+  .check-item input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid var(--border-strong); border-radius: 4px; cursor: pointer; flex-shrink: 0; position: relative; background: #fff; transition: all .15s; }
+  .check-item input[type="checkbox"]:checked { background: #f23d4f; border-color: #f23d4f; }
+  .check-item input[type="checkbox"]:checked::after { content: '✕'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 13px; font-weight: 900; line-height: 1; }
+  .check-item:has(input:checked) { border-color: #f23d4f; background: rgba(242,61,79,.08); color: #c11d2c; }
 
   /* ── Condicional ── */
   .cond { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
