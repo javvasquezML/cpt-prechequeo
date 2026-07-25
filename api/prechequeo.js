@@ -1,15 +1,17 @@
-const { put, list, head } = require('@vercel/blob');
+const { put, list } = require('@vercel/blob');
 
 const APP_PASS = process.env.APP_PASSWORD;
-const BLOB_KEY = 'registros.json';
+// Guardamos en el store público (CSV_READ_WRITE_TOKEN) con nombre difícil de adivinar
+const BLOB_KEY = 'prechequeo-registros-interno.json';
 
 async function leerRegistros() {
   try {
-    const { blobs } = await list({ prefix: BLOB_KEY, token: process.env.BLOB_READ_WRITE_TOKEN });
+    const { blobs } = await list({ prefix: BLOB_KEY, token: process.env.CSV_READ_WRITE_TOKEN });
     if (!blobs.length) return [];
-    const info = await head(blobs[0].url);
-    const resp = await fetch(info.downloadUrl);
-    return resp.ok ? await resp.json() : [];
+    // El blob es público: se puede leer directamente con fetch
+    const resp = await fetch(blobs[0].url, { cache: 'no-store' });
+    if (!resp.ok) return [];
+    return await resp.json();
   } catch (_) { return []; }
 }
 
@@ -32,9 +34,11 @@ module.exports = async (req, res) => {
       const registros = await leerRegistros();
       registros.unshift(reg);
       await put(BLOB_KEY, JSON.stringify(registros.slice(0, 500)), {
-        access: 'private', addRandomSuffix: false, allowOverwrite: true,
+        access: 'public',
+        addRandomSuffix: false,
+        allowOverwrite: true,
         contentType: 'application/json',
-        token: process.env.BLOB_READ_WRITE_TOKEN,
+        token: process.env.CSV_READ_WRITE_TOKEN,
       });
       return res.status(200).json({ ok: true, id: reg.id });
     } catch (e) { return res.status(500).json({ error: e.message }); }
