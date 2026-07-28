@@ -9,8 +9,8 @@ async function leerRegistros() {
   try {
     const { blobs } = await list({ prefix: BLOB_KEY, token: process.env.CSV_READ_WRITE_TOKEN });
     if (!blobs.length) return [];
-    // El blob es público: se puede leer directamente con fetch
-    const resp = await fetch(blobs[0].url, { cache: 'no-store' });
+    // Forzar bypass del CDN con parámetro único
+    const resp = await fetch(blobs[0].url + '?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) return [];
     return await resp.json();
   } catch (_) { return []; }
